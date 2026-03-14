@@ -8,7 +8,7 @@ import { VoteDuel } from "@/components/VoteDuel";
 import { useAppState } from "@/lib/app-state";
 
 export default function VotePage() {
-  const { currentPair, projects, castVote, voteHistory, votePairs, requireAuth } = useAppState();
+  const { currentPair, projects, castVote, voteHistory, votePairs, isAuthed, user, openAuthModal, requireAuth } = useAppState();
   const router = useRouter();
 
   useEffect(() => {
@@ -35,6 +35,12 @@ export default function VotePage() {
   const progress = `${voteHistory.length}/${votePairs.length} matchups voted`;
 
   function handleVote(winnerId: string) {
+    const hasValidAuth = Boolean(isAuthed && user?.email);
+    if (!hasValidAuth) {
+      openAuthModal("cast a vote");
+      return;
+    }
+
     if (!requireAuth("cast a vote")) {
       return;
     }
