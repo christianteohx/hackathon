@@ -24,14 +24,16 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 p-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-semibold">Hackathon Skeleton</h1>
+        <h1 className="text-3xl font-semibold">Hackathon Platform</h1>
         <p className="text-sm text-slate-600">
-          Minimal frontend, API, and Supabase connection check.
+          Auth, profile, project ownership, and voting navigation shell.
         </p>
       </div>
 
       <nav className="flex gap-4">
         <Link href="/submit">/submit</Link>
+        <Link href="/login">/login</Link>
+        <Link href="/my">/my</Link>
         <Link href="/vote">/vote</Link>
         <Link href="/leaderboard">/leaderboard</Link>
       </nav>

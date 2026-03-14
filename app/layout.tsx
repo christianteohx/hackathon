@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Hackathon Skeleton",
-  description: "Minimal Next.js hackathon starter"
+  title: "Hackathon Platform",
+  description: "Hackathon project and voting shell"
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="min-h-screen bg-white text-slate-900">{children}</body>
     </html>
   );
 }
