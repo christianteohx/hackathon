@@ -61,6 +61,13 @@ export default function VotePage() {
           Need to update your project first?
         </Link>
       </div>
+
+      {/* Temporary Debug Indicator */}
+      {typeof window !== 'undefined' && (
+        <div className="fixed bottom-4 left-4 p-2 bg-yellow-300 text-black text-xs rounded-md z-[9999]">
+          Auth Status: {isAuthed ? "Authenticated" : "Not Authenticated"}
+        </div>
+      )}
     </AppShell>
   );
 }

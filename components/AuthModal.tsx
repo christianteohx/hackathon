@@ -56,9 +56,9 @@ export function AuthModal({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[1000]">
-      <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[1px]" onClick={onClose} />
-      <div className="relative z-[1001] flex min-h-screen items-center justify-center px-4 py-6">
+    <div className="fixed inset-0 z-[9999] pointer-events-auto">
+      <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[1px] pointer-events-auto" onClick={onClose} />
+      <div className="relative z-[10000] flex min-h-screen items-center justify-center px-4 py-6 pointer-events-auto">
         <div
           role="dialog"
           aria-modal="true"
