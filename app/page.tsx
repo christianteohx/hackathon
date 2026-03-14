@@ -1,56 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { AppShell } from "@/components/AppShell";
+import { VoteDuel } from "@/components/VoteDuel";
+import { useAppState } from "@/lib/app-state";
 
-export default function HomePage() {
-  const [result, setResult] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+export default function LandingPage() {
+  const { currentPair, projects, castVote, voteHistory, votePairs } = useAppState();
+  const router = useRouter();
 
-  async function handleHealthCheck() {
-    setIsLoading(true);
+  const leftProject = projects.find((p) => p.id === currentPair?.leftProjectId);
+  const rightProject = projects.find((p) => p.id === currentPair?.rightProjectId);
 
-    try {
-      const response = await fetch("/api/health");
-      const data = await response.json();
-      setResult(JSON.stringify(data));
-    } catch {
-      setResult("Request failed");
-    } finally {
-      setIsLoading(false);
+  const progress = `${voteHistory.length}/${votePairs.length} matchups voted`;
+
+  function handleVote(winnerId: string) {
+    castVote(winnerId);
+    if (voteHistory.length + 1 >= votePairs.length) {
+      router.push("/done");
+    } else {
+      router.push("/vote");
     }
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 p-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold">Hackathon Skeleton</h1>
-        <p className="text-sm text-slate-600">
-          Minimal frontend, API, and Supabase connection check.
-        </p>
+    <AppShell
+      title="Hackathon Voting Arena"
+      subtitle="Compare two projects at a time. Pick the stronger one and keep going until all matchups are complete."
+    >
+      {currentPair && leftProject && rightProject ? (
+        <VoteDuel left={leftProject} right={rightProject} onVote={handleVote} progress={progress} />
+      ) : (
+        <section className="rounded-xl border border-emerald-300 bg-emerald-50 p-5">
+          <p className="font-semibold text-emerald-900">All comparisons completed.</p>
+          <p className="text-sm text-emerald-700">You voted through every available matchup.</p>
+          <Link href="/done" className="mt-3 inline-block text-sm font-semibold text-emerald-800">
+            Go to done page →
+          </Link>
+        </section>
+      )}
+
+      <div className="flex flex-wrap gap-3">
+        <Link href="/vote" className="rounded-lg border border-slate-300 px-4 py-2 text-sm no-underline">
+          Continue voting flow
+        </Link>
+        <Link href="/my" className="rounded-lg border border-slate-300 px-4 py-2 text-sm no-underline">
+          Manage my project
+        </Link>
       </div>
-
-      <nav className="flex gap-4">
-        <Link href="/submit">/submit</Link>
-        <Link href="/vote">/vote</Link>
-        <Link href="/leaderboard">/leaderboard</Link>
-      </nav>
-
-      <div className="space-y-3">
-        <button
-          type="button"
-          onClick={handleHealthCheck}
-          className="rounded border border-slate-300 px-4 py-2"
-        >
-          {isLoading ? "Checking..." : "Call /api/health"}
-        </button>
-
-        {result ? (
-          <pre className="rounded border border-slate-200 bg-slate-50 p-3 text-sm">
-            {result}
-          </pre>
-        ) : null}
-      </div>
-    </main>
+    </AppShell>
   );
 }
