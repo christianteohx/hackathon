@@ -1,75 +1,53 @@
-# Hackathon Platform
+# Hackathon Project Voting UI
 
-Minimal Next.js 14 + TypeScript + Tailwind + Supabase app for:
+Next.js 14 + TypeScript + Tailwind prototype for a hackathon voting and team membership flow.
 
-- login with Supabase email magic link
-- create user profile on first sign-in
-- create project / join project by code
-- edit project as owner
-- move between `/my` and `/vote`
+## What this includes
 
-## Install dependencies
+- Landing page with side-by-side project matchup (`Which project better?`)
+- Mock auth gate + login page
+- My page membership decision flow:
+  - no membership → create or join
+  - create project form
+  - join project form with join-code validation
+  - member view to edit project + see join code
+- Voting flow that records votes, advances matchup pairs, and loops until all done
+- Done page (`Thanks for voting!`)
+- Local mocked state persisted in `localStorage`
+
+## Route map
+
+- `/` — Landing matchup preview + quick vote
+- `/login` — Mock login
+- `/my` — Membership decision + member project editor (auth-gated)
+- `/my/create` — Create project (auth-gated)
+- `/my/join` — Join by code (auth-gated)
+- `/vote` — Main voting flow (auth-gated)
+- `/done` — Completion page (auth-gated)
+
+Existing utility routes still available:
+
+- `/api/health`
+- `/api/test-db`
+- `/submit` (legacy placeholder)
+- `/leaderboard` (legacy placeholder)
+
+## Run locally
 
 ```bash
 npm install
-```
-
-## Required environment variables
-
-Create `.env.local`:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-```
-
-## Supabase setup
-
-1. Run these SQL files in order:
-   - `supabase/migrations/0001_init_projects.sql`
-   - `supabase/migrations/0002_rls.sql`
-   - `supabase/ping.sql`
-2. In Supabase Auth settings, enable email sign-in.
-3. Add these redirect URLs:
-   - `http://localhost:3000/auth/callback`
-   - your deployed Vercel URL + `/auth/callback`
-
-`/api/test-db` calls `rpc("ping")` and returns success or failure.
-
-## Run the dev server
-
-```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Important routes:
+## Vercel readiness
 
-- `/login`
-- `/my`
-- `/project/create`
-- `/project/join`
-- `/vote`
-- `/api/me/project`
-- `/api/health`
-- `/api/test-db`
+This app is App Router based and deploys directly to Vercel with no extra config.
 
-## Manual smoke checklist
+If you use `/api/test-db`, set:
 
-1. Open `/login` and request a magic link.
-2. Complete auth and land on `/my`.
-3. Save `display_name` on first sign-in.
-4. Create a project or join one with a code.
-5. Confirm `/my` shows project info and join code.
-6. Confirm owner can edit and save.
-7. Confirm `/my` and `/vote` link to each other.
-
-## Deploy to Vercel
-
-1. Push the repo to GitHub.
-2. Import the project into Vercel.
-3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-4. Set the Vercel deployment URL in Supabase Auth redirect settings.
-5. Run the SQL files above in your Supabase project if you have not already.
-6. Deploy.
+```bash
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-supabase-anon-key
+```

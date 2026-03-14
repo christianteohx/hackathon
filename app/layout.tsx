@@ -4,8 +4,8 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Hackathon Platform",
-  description: "Hackathon project and voting shell"
+  title: "Hackathon Project Voting",
+  description: "Mocked hackathon voting and project membership flow"
 };
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-white text-slate-900">
+      <body>
         <Providers>{children}</Providers>
       </body>
     </html>
