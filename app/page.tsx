@@ -7,7 +7,7 @@ import { VoteDuel } from "@/components/VoteDuel";
 import { useAppState } from "@/lib/app-state";
 
 export default function LandingPage() {
-  const { currentPair, projects, castVote, voteHistory, votePairs, requireAuth } = useAppState();
+  const { currentPair, projects, castVote, voteHistory, votePairs, isAuthed, user, openAuthModal, requireAuth } = useAppState();
   const router = useRouter();
 
   const leftProject = projects.find((p) => p.id === currentPair?.leftProjectId);
@@ -16,6 +16,12 @@ export default function LandingPage() {
   const progress = `${voteHistory.length}/${votePairs.length} matchups voted`;
 
   function handleVote(winnerId: string) {
+    const hasValidAuth = Boolean(isAuthed && user?.email);
+    if (!hasValidAuth) {
+      openAuthModal("vote on projects");
+      return;
+    }
+
     if (!requireAuth("vote on projects")) {
       return;
     }
