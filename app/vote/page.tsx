@@ -4,12 +4,11 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { AuthGate } from "@/components/AuthGate";
 import { VoteDuel } from "@/components/VoteDuel";
 import { useAppState } from "@/lib/app-state";
 
 export default function VotePage() {
-  const { currentPair, projects, castVote, voteHistory, votePairs } = useAppState();
+  const { currentPair, projects, castVote, voteHistory, votePairs, requireAuth } = useAppState();
   const router = useRouter();
 
   useEffect(() => {
@@ -36,6 +35,10 @@ export default function VotePage() {
   const progress = `${voteHistory.length}/${votePairs.length} matchups voted`;
 
   function handleVote(winnerId: string) {
+    if (!requireAuth("cast a vote")) {
+      return;
+    }
+
     castVote(winnerId);
 
     if (voteHistory.length + 1 >= votePairs.length) {
@@ -45,15 +48,13 @@ export default function VotePage() {
 
   return (
     <AppShell title="Voting Flow" subtitle="Record votes and continue until all project matchups are done.">
-      <AuthGate>
-        <VoteDuel left={leftProject} right={rightProject} onVote={handleVote} progress={progress} />
+      <VoteDuel left={leftProject} right={rightProject} onVote={handleVote} progress={progress} />
 
-        <div>
-          <Link href="/my" className="text-sm">
-            Need to update your project first?
-          </Link>
-        </div>
-      </AuthGate>
+      <div>
+        <Link href="/my" className="text-sm">
+          Need to update your project first?
+        </Link>
+      </div>
     </AppShell>
   );
 }
