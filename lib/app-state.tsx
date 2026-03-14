@@ -8,6 +8,7 @@ import {
   useMemo,
   useState
 } from "react";
+import { AuthModal } from "@/components/AuthModal";
 import { buildVotePairs, MOCK_PROJECTS } from "./mockData";
 import { Project, VotePair, VoteRecord } from "./types";
 
@@ -23,8 +24,12 @@ type AppState = {
   votePairs: VotePair[];
   voteHistory: VoteRecord[];
   currentPair: VotePair | null;
+  authPromptAction: string;
   login: (name: string) => void;
   logout: () => void;
+  openAuthModal: (action?: string) => void;
+  closeAuthModal: () => void;
+  requireAuth: (action?: string) => boolean;
   createProject: (project: Pick<Project, "name" | "summary" | "owner">) => void;
   joinProjectByCode: (joinCode: string) => { ok: true } | { ok: false; message: string };
   saveProject: (projectId: string, update: Pick<Project, "name" | "summary">) => void;
@@ -50,6 +55,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
   const [votePairs, setVotePairs] = useState<VotePair[]>(buildVotePairs(MOCK_PROJECTS));
   const [voteHistory, setVoteHistory] = useState<VoteRecord[]>([]);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authPromptAction, setAuthPromptAction] = useState("continue");
 
   useEffect(() => {
     try {
@@ -100,17 +107,33 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     votePairs,
     voteHistory,
     currentPair,
+    authPromptAction,
     login: (name) => {
       setIsAuthed(true);
       setUser((existing) => ({
         name: name.trim() || "Hackathon Voter",
         projectId: existing?.projectId ?? null
       }));
+      setIsAuthModalOpen(false);
     },
     logout: () => {
       setIsAuthed(false);
       setUser(null);
       setVoteHistory([]);
+    },
+    openAuthModal: (action = "continue") => {
+      setAuthPromptAction(action);
+      setIsAuthModalOpen(true);
+    },
+    closeAuthModal: () => setIsAuthModalOpen(false),
+    requireAuth: (action = "continue") => {
+      if (isAuthed) {
+        return true;
+      }
+
+      setAuthPromptAction(action);
+      setIsAuthModalOpen(true);
+      return false;
     },
     createProject: ({ name, summary, owner }) => {
       const newProject: Project = {
@@ -164,7 +187,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     resetVoting: () => setVoteHistory([])
   };
 
-  return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
+  return (
+    <AppStateContext.Provider value={value}>
+      {children}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        actionLabel={authPromptAction}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLogin={value.login}
+      />
+    </AppStateContext.Provider>
+  );
 }
 
 export function useAppState() {
