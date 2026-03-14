@@ -8,7 +8,7 @@ import { VoteDuel } from "@/components/VoteDuel";
 import { useAppState } from "@/lib/app-state";
 
 export default function VotePage() {
-  const { currentPair, projects, castVote, voteHistory, votePairs, isAuthed, user, openAuthModal, requireAuth } = useAppState();
+  const { currentPair, projects, castVote, voteHistory, votePairs, requireAuth } = useAppState();
   const router = useRouter();
 
   useEffect(() => {
@@ -56,12 +56,6 @@ export default function VotePage() {
         </Link>
       </div>
 
-      {/* Temporary Debug Indicator */}
-      {typeof window !== 'undefined' && (
-        <div className="fixed bottom-4 left-4 p-2 bg-yellow-300 text-black text-xs rounded-md z-[9999]">
-          Auth Status: {isAuthed ? "Authenticated" : "Not Authenticated"}
-        </div>
-      )}
     </AppShell>
   );
 }
