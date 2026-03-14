@@ -70,8 +70,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           voteHistory: VoteRecord[];
         };
 
-        setIsAuthed(parsed.isAuthed);
-        setUser(parsed.user);
+        const normalizedEmail = parsed.user?.email?.trim().toLowerCase() ?? "";
+        const validSession = Boolean(parsed.isAuthed && normalizedEmail);
+
+        setIsAuthed(validSession);
+        setUser(
+          validSession
+            ? {
+                name: parsed.user?.name ?? normalizedEmail.split("@")[0] ?? "Hackathon Voter",
+                email: normalizedEmail,
+                projectId: parsed.user?.projectId ?? null
+              }
+            : null
+        );
         setProjects(parsed.projects?.length ? parsed.projects : MOCK_PROJECTS);
         setVoteHistory(parsed.voteHistory ?? []);
       }
@@ -132,8 +143,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     },
     closeAuthModal: () => setIsAuthModalOpen(false),
     requireAuth: (action = "continue") => {
-      if (isAuthed) {
+      const hasValidAuth = Boolean(isAuthed && user?.email);
+      if (hasValidAuth) {
         return true;
+      }
+
+      // force-clear stale local auth states from older schema
+      if (isAuthed && !user?.email) {
+        setIsAuthed(false);
+        setUser(null);
       }
 
       setAuthPromptAction(action);
