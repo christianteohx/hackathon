@@ -13,15 +13,17 @@ export function AuthModal({
   isOpen: boolean;
   actionLabel: string;
   onClose: () => void;
-  onLogin: (name: string) => void;
+  onLogin: (name: string, email: string) => void;
 }) {
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     if (!isOpen) {
       setMode("login");
       setName("");
+      setEmail("");
     }
   }, [isOpen]);
 
@@ -31,7 +33,7 @@ export function AuthModal({
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
-    onLogin(name);
+    onLogin(name, email);
   }
 
   return (
@@ -70,8 +72,20 @@ export function AuthModal({
 
         <form onSubmit={onSubmit} className="mt-4 space-y-4">
           <label className="block space-y-1">
+            <span className="text-sm font-medium text-slate-800">Email</span>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@school.edu"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            />
+          </label>
+
+          <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-800">
-              {mode === "login" ? "Display name" : "Choose a display name"}
+              {mode === "login" ? "Display name (optional)" : "Choose a display name (optional)"}
             </span>
             <input
               value={name}

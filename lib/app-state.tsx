@@ -14,6 +14,7 @@ import { Project, VotePair, VoteRecord } from "./types";
 
 type SessionUser = {
   name: string;
+  email: string;
   projectId: string | null;
 };
 
@@ -25,7 +26,7 @@ type AppState = {
   voteHistory: VoteRecord[];
   currentPair: VotePair | null;
   authPromptAction: string;
-  login: (name: string) => void;
+  login: (name: string, email: string) => void;
   logout: () => void;
   openAuthModal: (action?: string) => void;
   closeAuthModal: () => void;
@@ -108,10 +109,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     voteHistory,
     currentPair,
     authPromptAction,
-    login: (name) => {
+    login: (name, email) => {
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail) return;
+
       setIsAuthed(true);
       setUser((existing) => ({
-        name: name.trim() || "Hackathon Voter",
+        name: name.trim() || normalizedEmail.split("@")[0] || "Hackathon Voter",
+        email: normalizedEmail,
         projectId: existing?.projectId ?? null
       }));
       setIsAuthModalOpen(false);
@@ -145,7 +150,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       };
 
       setProjects((prev) => [...prev, newProject]);
-      setUser((prev) => ({ name: prev?.name ?? "Hackathon Voter", projectId: newProject.id }));
+      setUser((prev) => ({
+        name: prev?.name ?? "Hackathon Voter",
+        email: prev?.email ?? "",
+        projectId: newProject.id
+      }));
     },
     joinProjectByCode: (joinCode) => {
       const normalized = joinCode.trim().toUpperCase();
@@ -154,7 +163,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return { ok: false, message: "Join code not found. Try again." };
       }
 
-      setUser((prev) => ({ name: prev?.name ?? "Hackathon Voter", projectId: project.id }));
+      setUser((prev) => ({
+        name: prev?.name ?? "Hackathon Voter",
+        email: prev?.email ?? "",
+        projectId: project.id
+      }));
       return { ok: true };
     },
     saveProject: (projectId, update) => {
