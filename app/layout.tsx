@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Hackathon Skeleton",
-  description: "Minimal Next.js hackathon starter"
+  title: "Hackathon Project Voting",
+  description: "Mocked hackathon voting and project membership flow"
 };
 
 export default function RootLayout({
@@ -14,7 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
