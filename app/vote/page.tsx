@@ -35,12 +35,6 @@ export default function VotePage() {
   const progress = `${voteHistory.length}/${votePairs.length} matchups voted`;
 
   function handleVote(winnerId: string) {
-    const hasValidAuth = Boolean(isAuthed && user?.email);
-    if (!hasValidAuth) {
-      openAuthModal("cast a vote");
-      return;
-    }
-
     if (!requireAuth("cast a vote")) {
       return;
     }
