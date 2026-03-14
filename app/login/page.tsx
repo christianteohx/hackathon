@@ -7,6 +7,7 @@ import { useAppState } from "@/lib/app-state";
 
 export default function LoginPage() {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const { login, isAuthed, user } = useAppState();
   const router = useRouter();
   const [nextPath, setNextPath] = useState("/my");
@@ -18,7 +19,7 @@ export default function LoginPage() {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
-    login(name);
+    login(name, email);
     router.push(nextPath);
   }
 
@@ -39,7 +40,19 @@ export default function LoginPage() {
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <label className="block space-y-1">
-              <span className="text-sm font-medium">Display name</span>
+              <span className="text-sm font-medium">Email</span>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@school.edu"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </label>
+
+            <label className="block space-y-1">
+              <span className="text-sm font-medium">Display name (optional)</span>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
