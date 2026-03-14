@@ -26,7 +26,7 @@ export function VoteDuel({
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+      <div className="grid grid-cols-2 gap-6 max-[700px]:grid-cols-1 max-[700px]:gap-5">
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Left Project</p>
           <ProjectCard project={left} />
