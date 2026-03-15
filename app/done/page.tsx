@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
@@ -19,12 +18,18 @@ export default function DonePage() {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => { resetVoting(); router.push("/"); }}
+            onClick={() => {
+              resetVoting();
+              router.push("/");
+            }}
             className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
           >
             Vote again
           </button>
-          <Link href="/" className="rounded-lg border border-emerald-700 px-4 py-2 text-sm no-underline">
+          <Link
+            href="/"
+            className="rounded-lg border border-emerald-700 px-4 py-2 text-sm no-underline"
+          >
             Back to landing
           </Link>
         </div>

@@ -22,13 +22,13 @@ export function MyPageEmptyState({
 
       <div className="flex flex-wrap gap-3">
         <Link
-          href="/project/create"
+          href="/my/create"
           className="rounded border border-slate-300 px-4 py-2"
         >
           Create Project
         </Link>
         <Link
-          href="/project/join"
+          href="/my/join"
           className="rounded border border-slate-300 px-4 py-2"
         >
           Join Project
