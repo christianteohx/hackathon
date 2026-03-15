@@ -16,182 +16,112 @@ export function AppShell({
   const { isAuthed, user, logout, openAuthModal } = useAppState();
 
   return (
-    <main
-      style={{
-        width: "100%",
-        maxWidth: "1200px",
-        margin: "0 auto",
-        padding: "32px 16px",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        gap: "32px",
-      }}
-    >
-      <header style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+    <main style={{
+      width: "100%",
+      maxWidth: "800px",
+      margin: "0 auto",
+      padding: "40px 24px",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      gap: "32px",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }}>
+      {/* Header */}
+      <header>
         {/* Navigation */}
-        <nav
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          <Link
-            href="/"
-            style={{
-              borderRadius: "9999px",
-              border: "1px solid #cbd5e1",
-              backgroundColor: "white",
-              padding: "6px 16px",
-              fontSize: "14px",
-              fontWeight: 500,
-              color: "#334155",
-              textDecoration: "none",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-              transition: "all 0.2s",
-            }}
-          >
-            Home
-          </Link>
-          <Link
-            href="/vote"
-            style={{
-              borderRadius: "9999px",
-              border: "1px solid #cbd5e1",
-              backgroundColor: "white",
-              padding: "6px 16px",
-              fontSize: "14px",
-              fontWeight: 500,
-              color: "#334155",
-              textDecoration: "none",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-              transition: "all 0.2s",
-            }}
-          >
-            Vote
-          </Link>
-          <Link
-            href="/my"
-            style={{
-              borderRadius: "9999px",
-              border: "1px solid #cbd5e1",
-              backgroundColor: "white",
-              padding: "6px 16px",
-              fontSize: "14px",
-              fontWeight: 500,
-              color: "#334155",
-              textDecoration: "none",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-              transition: "all 0.2s",
-            }}
-          >
-            My Page
-          </Link>
-          <Link
-            href="/leaderboard"
-            style={{
-              borderRadius: "9999px",
-              border: "1px solid #cbd5e1",
-              backgroundColor: "white",
-              padding: "6px 16px",
-              fontSize: "14px",
-              fontWeight: 500,
-              color: "#334155",
-              textDecoration: "none",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-              transition: "all 0.2s",
-            }}
-          >
-            Leaderboard
-          </Link>
-
+        <nav style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          marginBottom: "24px",
+        }}>
+          <Link href="/" style={navLinkStyle}>Home</Link>
+          <Link href="/vote" style={navLinkStyle}>Vote</Link>
+          <Link href="/my" style={navLinkStyle}>My Page</Link>
+          <Link href="/leaderboard" style={navLinkStyle}>Leaderboard</Link>
+          
           {!isAuthed ? (
-            <button
-              type="button"
-              onClick={() => openAuthModal("sign in")}
-              style={{
-                borderRadius: "9999px",
-                border: "1px solid #3b82f6",
-                backgroundColor: "#3b82f6",
-                padding: "6px 16px",
-                fontSize: "14px",
-                fontWeight: 500,
-                color: "white",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                cursor: "pointer",
-                marginLeft: "auto",
-              }}
-            >
+            <button type="button" onClick={() => openAuthModal("sign in")} style={primaryButtonStyle}>
               Login / Register
             </button>
           ) : (
             <>
-              <span
-                style={{
-                  borderRadius: "9999px",
-                  border: "1px solid #a7f3d0",
-                  backgroundColor: "#f0fdf4",
-                  padding: "6px 16px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "#16a34a",
-                  marginLeft: "auto",
-                }}
-              >
-                {user?.email}
-              </span>
-              <button
-                type="button"
-                onClick={logout}
-                style={{
-                  borderRadius: "9999px",
-                  border: "1px solid #fecdd3",
-                  backgroundColor: "#fff1f2",
-                  padding: "6px 16px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "#e11d48",
-                  cursor: "pointer",
-                }}
-              >
+              <span style={userBadgeStyle}>{user?.email}</span>
+              <button type="button" onClick={logout} style={logoutButtonStyle}>
                 Logout
               </button>
             </>
           )}
         </nav>
 
-        {/* Title & Subtitle */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <h1
-            style={{
-              fontSize: "36px",
-              fontWeight: 700,
-              color: "#0f172a",
-              letterSpacing: "-0.025em",
-              margin: 0,
-            }}
-          >
-            {title}
-          </h1>
-          {subtitle ? (
-            <p
-              style={{
-                maxWidth: "600px",
-                fontSize: "16px",
-                color: "#64748b",
-                lineHeight: 1.6,
-                margin: 0,
-              }}
-            >
-              {subtitle}
-            </p>
-          ) : null}
-        </div>
+        {/* Title */}
+        <h1 style={{
+          fontSize: "32px",
+          fontWeight: 700,
+          color: "#111",
+          margin: "0 0 8px 0",
+        }}>
+          {title}
+        </h1>
+        
+        {subtitle && (
+          <p style={{
+            fontSize: "16px",
+            color: "#666",
+            margin: 0,
+            lineHeight: 1.5,
+          }}>
+            {subtitle}
+          </p>
+        )}
       </header>
 
       {children}
     </main>
   );
 }
+
+const navLinkStyle: React.CSSProperties = {
+  padding: "8px 16px",
+  fontSize: "14px",
+  fontWeight: 500,
+  color: "#333",
+  textDecoration: "none",
+  borderRadius: "6px",
+  backgroundColor: "#f5f5f5",
+  border: "1px solid #ddd",
+};
+
+const primaryButtonStyle: React.CSSProperties = {
+  padding: "8px 16px",
+  fontSize: "14px",
+  fontWeight: 500,
+  color: "white",
+  backgroundColor: "#2563eb",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  marginLeft: "auto",
+};
+
+const userBadgeStyle: React.CSSProperties = {
+  padding: "6px 12px",
+  fontSize: "12px",
+  fontWeight: 500,
+  color: "#16a34a",
+  backgroundColor: "#dcfce7",
+  borderRadius: "9999px",
+  marginLeft: "auto",
+};
+
+const logoutButtonStyle: React.CSSProperties = {
+  padding: "6px 12px",
+  fontSize: "12px",
+  fontWeight: 500,
+  color: "#dc2626",
+  backgroundColor: "#fee2e2",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+};
