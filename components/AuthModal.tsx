@@ -120,12 +120,12 @@ export function AuthModal({
     >
       {/* Blurred dark background overlay */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
+        className="absolute inset-0 bg-black/80 backdrop-blur-md z-[9998]"
         onClick={onClose}
       />
 
-      {/* Modal content */}
-      <div className="relative z-[9999] w-full max-w-md mx-4">
+      {/* Modal content wrapper for proper centering */}
+      <div className="relative z-[9999] flex items-center justify-center w-full px-4">
         <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           {/* Header with close button */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
