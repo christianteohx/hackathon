@@ -43,6 +43,8 @@ export default function VotePage() {
 
     if (voteHistory.length + 1 >= votePairs.length) {
       router.push("/done");
+    } else {
+      router.push("/vote");
     }
   }
 

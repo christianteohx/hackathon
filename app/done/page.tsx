@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { useAppState } from "@/lib/app-state";
 
 export default function DonePage() {
   const { voteHistory, votePairs, resetVoting } = useAppState();
+  const router = useRouter();
 
   return (
     <AppShell title="Done" subtitle="Thanks for voting!">
@@ -17,7 +19,7 @@ export default function DonePage() {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={resetVoting}
+            onClick={() => { resetVoting(); router.push("/"); }}
             className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
           >
             Vote again
