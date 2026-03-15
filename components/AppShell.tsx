@@ -18,23 +18,22 @@ export function AppShell({
   return (
     <main style={{
       width: "100%",
-      maxWidth: "800px",
+      maxWidth: "700px",
       margin: "0 auto",
-      padding: "40px 24px",
+      padding: "24px 20px",
       minHeight: "100vh",
       display: "flex",
       flexDirection: "column",
-      gap: "32px",
+      gap: "24px",
       fontFamily: "system-ui, -apple-system, sans-serif",
     }}>
-      {/* Header */}
-      <header>
-        {/* Navigation */}
+      <header style={{ marginBottom: "8px" }}>
         <nav style={{
           display: "flex",
           alignItems: "center",
-          gap: "12px",
-          marginBottom: "24px",
+          gap: "8px",
+          marginBottom: "16px",
+          flexWrap: "wrap",
         }}>
           <Link href="/" style={navLinkStyle}>Home</Link>
           <Link href="/vote" style={navLinkStyle}>Vote</Link>
@@ -55,19 +54,18 @@ export function AppShell({
           )}
         </nav>
 
-        {/* Title */}
         <h1 style={{
-          fontSize: "32px",
+          fontSize: "28px",
           fontWeight: 700,
           color: "#111",
-          margin: "0 0 8px 0",
+          margin: "0 0 6px 0",
         }}>
           {title}
         </h1>
         
         {subtitle && (
           <p style={{
-            fontSize: "16px",
+            fontSize: "14px",
             color: "#666",
             margin: 0,
             lineHeight: 1.5,
@@ -83,31 +81,31 @@ export function AppShell({
 }
 
 const navLinkStyle: React.CSSProperties = {
-  padding: "8px 16px",
-  fontSize: "14px",
+  padding: "6px 12px",
+  fontSize: "13px",
   fontWeight: 500,
-  color: "#333",
+  color: "#444",
   textDecoration: "none",
-  borderRadius: "6px",
-  backgroundColor: "#f5f5f5",
+  borderRadius: "4px",
+  backgroundColor: "#f0f0f0",
   border: "1px solid #ddd",
 };
 
 const primaryButtonStyle: React.CSSProperties = {
-  padding: "8px 16px",
-  fontSize: "14px",
+  padding: "6px 12px",
+  fontSize: "13px",
   fontWeight: 500,
   color: "white",
   backgroundColor: "#2563eb",
   border: "none",
-  borderRadius: "6px",
+  borderRadius: "4px",
   cursor: "pointer",
   marginLeft: "auto",
 };
 
 const userBadgeStyle: React.CSSProperties = {
-  padding: "6px 12px",
-  fontSize: "12px",
+  padding: "4px 10px",
+  fontSize: "11px",
   fontWeight: 500,
   color: "#16a34a",
   backgroundColor: "#dcfce7",
@@ -116,12 +114,12 @@ const userBadgeStyle: React.CSSProperties = {
 };
 
 const logoutButtonStyle: React.CSSProperties = {
-  padding: "6px 12px",
-  fontSize: "12px",
+  padding: "4px 10px",
+  fontSize: "11px",
   fontWeight: 500,
   color: "#dc2626",
   backgroundColor: "#fee2e2",
   border: "none",
-  borderRadius: "6px",
+  borderRadius: "4px",
   cursor: "pointer",
 };
