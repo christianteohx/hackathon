@@ -25,6 +25,7 @@ export function AuthModal({
   const [success, setSuccess] = useState(false);
 
   const emailInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -46,14 +47,18 @@ export function AuthModal({
     if (!mounted) return;
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      emailInputRef.current?.focus();
+      if (authMode === "register") {
+        nameInputRef.current?.focus();
+      } else {
+        emailInputRef.current?.focus();
+      }
     } else {
       document.body.style.overflow = "";
     }
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen, mounted]);
+  }, [isOpen, mounted, authMode]);
 
   if (!isOpen || !mounted) {
     return null;
@@ -212,7 +217,7 @@ export function AuthModal({
                     </span>
                     <input
                       id="name-input"
-                      ref={authMode === "register" ? emailInputRef : undefined}
+                      ref={nameInputRef}
                       type="text"
                       required={authMode === "register"}
                       value={name}
