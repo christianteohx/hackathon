@@ -6,7 +6,7 @@ Goal: Deploy a working platform where teams can submit projects, users vote betw
 
 # Phase 0 – Project Setup
 
-- [ ] Create Next.js project (App Router + TypeScript)
+- [x] Create Next.js project (App Router + TypeScript)
 - [ ] Connect GitHub repository
 - [ ] Deploy base project to Vercel
 - [ ] Create Supabase project

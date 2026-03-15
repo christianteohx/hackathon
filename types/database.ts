@@ -4,15 +4,10 @@ export type Database = {
     Enums: Record<string, never>;
     Functions: {
       find_project_by_join_code: {
-        Args: {
-          input_join_code: string;
-        };
+        Args: { input_join_code: string };
         Returns: string | null;
       };
-      ping: {
-        Args: Record<string, never>;
-        Returns: number;
-      };
+      ping: { Args: Record<string, never>; Returns: number };
     };
     Tables: {
       project_members: {
@@ -52,6 +47,48 @@ export type Database = {
           project_id?: string;
           role?: "member" | "owner";
           user_id?: string;
+        };
+      };
+      profiles: {
+        Insert: {
+          created_at?: string;
+          email?: string;
+          id: string;
+          name?: string | null;
+          project_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            columns: ["id"];
+            foreignKeyName: "profiles_id_fkey";
+            isOneToOne: true;
+            referencedColumns: ["id"];
+            referencedRelation: "users";
+          },
+          {
+            columns: ["project_id"];
+            foreignKeyName: "profiles_project_id_fkey";
+            isOneToOne: false;
+            referencedColumns: ["id"];
+            referencedRelation: "projects";
+          }
+        ];
+        Row: {
+          created_at: string;
+          email: string | null;
+          id: string;
+          name: string | null;
+          projectId: string | null;
+          updated_at: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          name?: string | null;
+          project_id?: string | null;
+          updated_at?: string;
         };
       };
       projects: {
