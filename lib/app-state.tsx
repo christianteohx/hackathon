@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useState
-} from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { buildVotePairs, MOCK_PROJECTS } from "./mockData";
 import { Project, VotePair, VoteRecord } from "./types";
@@ -43,10 +36,7 @@ const STORAGE_KEY = "hackathon-vote-ui-state-v1";
 const AppStateContext = createContext<AppState | null>(null);
 
 function generateJoinCode(name: string) {
-  return `${name
-    .replace(/[^a-zA-Z0-9]/g, "")
-    .slice(0, 6)
-    .toUpperCase()}${Math.floor(10 + Math.random() * 89)}`;
+  return `${name.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase()}${Math.floor(10 + Math.random() * 89)}`;
 }
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
@@ -69,17 +59,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           projects: Project[];
           voteHistory: VoteRecord[];
         };
-
         const normalizedEmail = parsed.user?.email?.trim().toLowerCase() ?? "";
         const validSession = Boolean(parsed.isAuthed && normalizedEmail);
-
         setIsAuthed(validSession);
         setUser(
           validSession
             ? {
                 name: parsed.user?.name ?? normalizedEmail.split("@")[0] ?? "Hackathon Voter",
                 email: normalizedEmail,
-                projectId: parsed.user?.projectId ?? null
+                projectId: parsed.user?.projectId ?? null,
               }
             : null
         );
@@ -99,7 +87,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ isAuthed, user, projects, voteHistory })
@@ -123,12 +110,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     login: (name, email) => {
       const normalizedEmail = email.trim().toLowerCase();
       if (!normalizedEmail) return;
-
       setIsAuthed(true);
       setUser((existing) => ({
         name: name.trim() || normalizedEmail.split("@")[0] || "Hackathon Voter",
         email: normalizedEmail,
-        projectId: existing?.projectId ?? null
+        projectId: existing?.projectId ?? null,
       }));
       setIsAuthModalOpen(false);
     },
@@ -147,14 +133,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (hasValidAuth) {
         return true;
       }
-
-      // If authentication is not valid, ensure auth states are cleared
-      // and the modal is opened.
-      if (isAuthed || user?.email) {
+      // force-clear stale local auth states from older schema
+      if (isAuthed && !user?.email) {
         setIsAuthed(false);
         setUser(null);
       }
-
       setAuthPromptAction(action);
       setIsAuthModalOpen(true);
       return false;
@@ -165,14 +148,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         name: name.trim(),
         summary: summary.trim(),
         owner: owner.trim(),
-        joinCode: generateJoinCode(name)
+        joinCode: generateJoinCode(name),
       };
-
       setProjects((prev) => [...prev, newProject]);
       setUser((prev) => ({
         name: prev?.name ?? "Hackathon Voter",
         email: prev?.email ?? "",
-        projectId: newProject.id
+        projectId: newProject.id,
       }));
     },
     joinProjectByCode: (joinCode) => {
@@ -181,11 +163,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (!project) {
         return { ok: false, message: "Join code not found. Try again." };
       }
-
       setUser((prev) => ({
         name: prev?.name ?? "Hackathon Voter",
         email: prev?.email ?? "",
-        projectId: project.id
+        projectId: project.id,
       }));
       return { ok: true };
     },
@@ -193,18 +174,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setProjects((prev) =>
         prev.map((project) =>
           project.id === projectId
-            ? {
-                ...project,
-                name: update.name.trim(),
-                summary: update.summary.trim()
-              }
+            ? { ...project, name: update.name.trim(), summary: update.summary.trim() }
             : project
         )
       );
     },
     castVote: (winnerId) => {
       if (!currentPair) return;
-
       const loserId = currentPair.leftProjectId === winnerId ? currentPair.rightProjectId : currentPair.leftProjectId;
       setVoteHistory((prev) => [
         ...prev,
@@ -212,11 +188,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           pairId: currentPair.id,
           winnerId,
           loserId,
-          at: new Date().toISOString()
-        }
+          at: new Date().toISOString(),
+        },
       ]);
     },
-    resetVoting: () => setVoteHistory([])
+    resetVoting: () => setVoteHistory([]),
   };
 
   return (
@@ -237,6 +213,5 @@ export function useAppState() {
   if (!value) {
     throw new Error("useAppState must be used inside AppStateProvider");
   }
-
   return value;
 }
