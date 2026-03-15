@@ -148,8 +148,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return true;
       }
 
-      // force-clear stale local auth states from older schema
-      if (isAuthed && !user?.email) {
+      // If authentication is not valid, ensure auth states are cleared
+      // and the modal is opened.
+      if (isAuthed || user?.email) {
         setIsAuthed(false);
         setUser(null);
       }
