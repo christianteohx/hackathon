@@ -73,7 +73,9 @@ export function AuthModal({
     try {
       const response = await fetch("/api/auth", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           mode: authMode,
           email,
@@ -90,12 +92,10 @@ export function AuthModal({
 
       setSuccess(true);
 
-      // Call onLogin callback with user info
       if (onLogin && data.user) {
         onLogin(data.user.name || name, data.user.email);
       }
 
-      // Close modal after a brief delay
       setTimeout(() => onClose(), 1500);
     } catch (err) {
       console.error("Authentication error:", err);
@@ -112,26 +112,71 @@ export function AuthModal({
   };
 
   return createPortal(
+    // Outer container - FULL SCREEN FIXED positioning with CENTERED content
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-auto"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="auth-modal-title"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 999999,
+      }}
     >
       {/* Blurred dark background overlay */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-md z-[9998]"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          backdropFilter: "blur(8px)",
+          zIndex: 999998,
+        }}
         onClick={onClose}
       />
 
-      {/* Modal content wrapper for proper centering */}
-      <div className="relative z-[9999] flex items-center justify-center w-full px-4">
-        <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          {/* Header with close button */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+      {/* Modal content - centered, with explicit width constraints */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 999999,
+          width: "100%",
+          maxWidth: "420px",
+          padding: "0 16px",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "white",
+            borderRadius: "16px",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+            border: "1px solid #e2e8f0",
+            overflow: "hidden",
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 24px",
+              borderBottom: "1px solid #e2e8f0",
+            }}
+          >
             <h2
-              id="auth-modal-title"
-              className="text-lg font-semibold text-slate-900 dark:text-white"
+              style={{
+                fontSize: "18px",
+                fontWeight: 600,
+                color: "#0f172a",
+                margin: 0,
+              }}
             >
               {success
                 ? "Success!"
@@ -142,11 +187,19 @@ export function AuthModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "8px",
+                borderRadius: "8px",
+                color: "#64748b",
+              }}
               aria-label="Close dialog"
             >
               <svg
-                className="h-5 w-5"
+                width="20"
+                height="20"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -162,16 +215,34 @@ export function AuthModal({
           </div>
 
           {/* Body */}
-          <div className="px-6 py-6">
+          <div style={{ padding: "24px" }}>
             {error && (
-              <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <div
+                style={{
+                  marginBottom: "16px",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  backgroundColor: "#fef2f2",
+                  border: "1px solid #fecaca",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "14px", color: "#dc2626" }}>
+                  {error}
+                </p>
               </div>
             )}
 
             {success && (
-              <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3">
-                <p className="text-sm text-green-600 dark:text-green-400">
+              <div
+                style={{
+                  marginBottom: "16px",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  backgroundColor: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "14px", color: "#16a34a" }}>
                   {authMode === "signin"
                     ? "Successfully signed in!"
                     : "Account created successfully!"}
@@ -180,17 +251,32 @@ export function AuthModal({
             )}
 
             {!success && (
-              <form onSubmit={onSubmit} className="space-y-4">
-                {/* Toggle tabs for Sign In / Register */}
-                <div className="flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
+              <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {/* Toggle tabs */}
+                <div
+                  style={{
+                    display: "flex",
+                    borderRadius: "8px",
+                    backgroundColor: "#f1f5f9",
+                    padding: "4px",
+                  }}
+                >
                   <button
                     type="button"
                     onClick={() => !isLoading && setAuthMode("signin")}
-                    className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                      authMode === "signin"
-                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
+                    style={{
+                      flex: 1,
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      border: "none",
+                      backgroundColor:
+                        authMode === "signin" ? "white" : "transparent",
+                      color: authMode === "signin" ? "#0f172a" : "#64748b",
+                      fontWeight: 500,
+                      fontSize: "14px",
+                      cursor: isLoading ? "not-allowed" : "pointer",
+                      boxShadow: authMode === "signin" ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
+                    }}
                     disabled={isLoading}
                   >
                     Sign In
@@ -198,11 +284,19 @@ export function AuthModal({
                   <button
                     type="button"
                     onClick={() => !isLoading && setAuthMode("register")}
-                    className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                      authMode === "register"
-                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
+                    style={{
+                      flex: 1,
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      border: "none",
+                      backgroundColor:
+                        authMode === "register" ? "white" : "transparent",
+                      color: authMode === "register" ? "#0f172a" : "#64748b",
+                      fontWeight: 500,
+                      fontSize: "14px",
+                      cursor: isLoading ? "not-allowed" : "pointer",
+                      boxShadow: authMode === "register" ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
+                    }}
                     disabled={isLoading}
                   >
                     Register
@@ -211,76 +305,96 @@ export function AuthModal({
 
                 {/* Name input (register only) */}
                 {authMode === "register" && (
-                  <label htmlFor="name-input" className="block space-y-1">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  <label style={{ display: "block" }}>
+                    <span style={{ display: "block", fontSize: "14px", fontWeight: 500, color: "#334155", marginBottom: "4px" }}>
                       Display Name
                     </span>
                     <input
-                      id="name-input"
                       ref={nameInputRef}
                       type="text"
-                      required={authMode === "register"}
+                      required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Enter your name"
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       disabled={isLoading}
-                      autoComplete="name"
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "14px",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
                     />
                   </label>
                 )}
 
                 {/* Email input */}
-                <label htmlFor="email-input" className="block space-y-1">
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label style={{ display: "block" }}>
+                  <span style={{ display: "block", fontSize: "14px", fontWeight: 500, color: "#334155", marginBottom: "4px" }}>
                     Email Address
                   </span>
                   <input
-                    id="email-input"
                     ref={authMode === "signin" ? emailInputRef : undefined}
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     disabled={isLoading}
-                    autoComplete={
-                      authMode === "signin" ? "email" : "username email"
-                    }
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
                   />
                 </label>
 
                 {/* Password input */}
-                <label htmlFor="password-input" className="block space-y-1">
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <label style={{ display: "block" }}>
+                  <span style={{ display: "block", fontSize: "14px", fontWeight: 500, color: "#334155", marginBottom: "4px" }}>
                     Password
                   </span>
                   <input
-                    id="password-input"
                     type="password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder={
-                      authMode === "signin"
-                        ? "Enter your password"
-                        : "Create a password (min 6 characters)"
-                    }
+                    placeholder={authMode === "signin" ? "Enter your password" : "Create a password (min 6 characters)"}
                     minLength={6}
-                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     disabled={isLoading}
-                    autoComplete={
-                      authMode === "signin" ? "current-password" : "new-password"
-                    }
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
                   />
                 </label>
 
                 {/* Submit button */}
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading || !email || !password || (authMode === "register" && !name)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 16px",
+                    borderRadius: "8px",
+                    border: "none",
+                    backgroundColor: isLoading || !email || !password || (authMode === "register" && !name) ? "#94a3b8" : "#2563eb",
+                    color: "white",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    cursor: isLoading || !email || !password || (authMode === "register" && !name) ? "not-allowed" : "pointer",
+                  }}
                 >
                   {isLoading
                     ? "Please wait..."
@@ -294,14 +408,28 @@ export function AuthModal({
 
           {/* Footer */}
           {!success && (
-            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">
-              <p className="text-center text-sm text-slate-600 dark:text-slate-400">
+            <div
+              style={{
+                padding: "16px 24px",
+                backgroundColor: "#f8fafc",
+                borderTop: "1px solid #e2e8f0",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ margin: 0, fontSize: "14px", color: "#64748b" }}>
                 {authMode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
                 <button
                   type="button"
                   onClick={toggleMode}
-                  className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                   disabled={isLoading}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#2563eb",
+                    fontWeight: 500,
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    padding: 0,
+                  }}
                 >
                   {authMode === "signin" ? "Register here" : "Sign in here"}
                 </button>
