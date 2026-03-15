@@ -36,7 +36,10 @@ const STORAGE_KEY = "hackathon-vote-ui-state-v1";
 const AppStateContext = createContext<AppState | null>(null);
 
 function generateJoinCode(name: string) {
-  return `${name.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase()}${Math.floor(10 + Math.random() * 89)}`;
+  return `${name
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 6)
+    .toUpperCase()}${Math.floor(10 + Math.random() * 89)}`;
 }
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
@@ -61,6 +64,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         };
         const normalizedEmail = parsed.user?.email?.trim().toLowerCase() ?? "";
         const validSession = Boolean(parsed.isAuthed && normalizedEmail);
+
         setIsAuthed(validSession);
         setUser(
           validSession
