@@ -39,9 +39,9 @@ Page: `/submit`
 - [ ] Submission form UI
 - [ ] Form fields:
   - [ ] team name
-  - [ ] project name
-  - [ ] tagline
-  - [ ] description
+  - [x] project name
+  - [x] tagline
+  - [x] description
   - [ ] demo URL (optional)
   - [ ] github URL (optional)
 - [ ] Form validation
@@ -59,8 +59,8 @@ Fields
 - [ ] id
 - [ ] team_name
 - [ ] project_name
-- [ ] tagline
-- [ ] description
+- [x] tagline
+- [x] description
 - [ ] demo_url
 - [ ] github_url
 - [ ] created_at
@@ -85,8 +85,8 @@ Page: `/vote`
 - [ ] Fetch two random projects
 - [ ] Display project cards
 - [ ] Show:
-  - [ ] project name
-  - [ ] tagline
+  - [x] project name
+  - [x] tagline
   - [ ] short description
 - [ ] Vote buttons
 - [ ] Store vote result
@@ -149,17 +149,17 @@ Page: `/admin`
 
 ## AI Pitch Generator
 
-- [ ] Input:
-  - [ ] project name
-  - [ ] tagline
-  - [ ] description
+- [x] Input:
+  - [x] project name
+  - [x] tagline
+  - [x] description
 
-- [ ] Output:
-  - [ ] one-line pitch
-  - [ ] audience pitch
-  - [ ] judge pitch
+- [x] Output:
+  - [x] one-line pitch
+  - [x] audience pitch
+  - [x] judge pitch
 
-- [ ] Display on project page
+- [x] Display on project page
 
 ---
 
