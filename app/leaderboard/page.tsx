@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useSearchParams } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 
 interface TeamVote {
@@ -18,11 +19,34 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      setLoading(true);
       try {
-        // Fetch all projects with Elo ratings
-        const { data: projects, error: projectsError } = await supabase
-          .from("projects")
-          .select("id, name, elo_rating");
+        const searchParams = new URLSearchParams(window.location.search);
+        const hackathonSlug = searchParams.get('hackathon') || 'default-hackathon'; // Default to 'default-hackathon'
+
+        let currentHackathonId: string | null = null;
+        if (hackathonSlug) {
+          const { data: hackathonData, error: hackathonError } = await supabase
+            .from('hackathons')
+            .select('id')
+            .eq('slug', hackathonSlug)
+            .single();
+
+          if (hackathonError || !hackathonData) {
+            console.error('Error fetching hackathon:', hackathonError);
+            setLeaderboardData([]);
+            setLoading(false);
+            return;
+          }
+          currentHackathonId = hackathonData.id;
+        }
+
+        let projectsQuery = supabase.from("projects").select("id, name, elo_rating");
+        if (currentHackathonId) {
+          projectsQuery = projectsQuery.eq('hackathon_id', currentHackathonId);
+        }
+
+        const { data: projects, error: projectsError } = await projectsQuery;
 
         if (projectsError) {
           console.error("Error fetching projects:", projectsError);
@@ -31,10 +55,12 @@ export default function LeaderboardPage() {
           return;
         }
 
-        // Fetch all votes
-        const { data: votes, error: votesError } = await supabase
-          .from("votes")
-          .select("winner_project_id");
+        let votesQuery = supabase.from("votes").select("winner_project_id");
+        if (currentHackathonId) {
+          votesQuery = votesQuery.eq('hackathon_id', currentHackathonId);
+        }
+
+        const { data: votes, error: votesError } = await votesQuery;
 
         if (votesError) {
           console.error("Error fetching votes:", votesError);
@@ -213,7 +239,7 @@ export default function LeaderboardPage() {
         onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
         onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
       />
-      {filteredData.length === 0 ? (
+      {searchTerm && filteredData.length === 0 ? (
         <div style={noResultsStyle}>
           No teams found matching "{searchTerm}"
         </div>
