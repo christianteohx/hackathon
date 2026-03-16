@@ -115,7 +115,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         console.error("Error fetching votes:", votesError);
         setVoteHistory([]);
       } else {
-        setVoteHistory(fetchedVotes || []);
+  const mappedVotes = (fetchedVotes || []).map((vote) => ({ ...vote, pairId: `${vote.left_project_id}__${vote.right_project_id}`, winnerId: vote.winner_project_id, loserId: vote.winner_project_id === vote.left_project_id ? vote.right_project_id : vote.left_project_id, at: vote.created_at, }));
       }
 
       setHydrated(true);
