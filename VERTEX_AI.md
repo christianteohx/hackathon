@@ -107,3 +107,75 @@ The system uses `gemini-1.5-flash-001` for fast, cost-effective pitch generation
 ## Fallback Behavior
 
 If Vertex AI is unavailable or fails, the system provides sensible fallback pitches based on the project details to ensure the application remains functional.
+
+---
+
+## AI Judge Endpoint
+
+### Generate Judge Feedback
+POST to `/api/judge` to get AI judge evaluation:
+
+```bash
+curl -X POST http://localhost:3000/api/judge \
+  -H "Content-Type: application/json" \
+  -d '{
+    "projectName": "My Awesome Project",
+    "tagline": "Revolutionizing the way we work",
+    "description": "A platform that uses AI to optimize workflow efficiency...",
+    "demoUrl": "https://demo.example.com",
+    "githubUrl": "https://github.com/example/project"
+  }'
+```
+
+Response:
+```json
+{
+  "success": true,
+  "data": {
+    "score": 87,
+    "verdict": "This project demonstrates strong technical execution and clear market potential with innovative use of AI.",
+    "strengths": [
+      "Clear problem-solution fit with strong value proposition",
+      "Well-architected technical implementation using modern frameworks",
+      "Demonstrable impact on target market efficiency"
+    ],
+    "concerns": [
+      "Competitive landscape analysis could be more thorough",
+      "Scalability considerations for high-volume usage need refinement",
+      "User onboarding flow requires further optimization"
+    ]
+  }
+}
+```
+
+### Programmatic Usage
+```typescript
+import { generateJudgeFeedback } from '@/lib/judge-ai';
+
+const feedback = await generateJudgeFeedback({
+  projectName: "My Project",
+  tagline: "Amazing tagline",
+  description: "Project description...",
+  demoUrl: "https://demo.example.com",
+  githubUrl: "https://github.com/example/project"
+});
+
+console.log(feedback.score);        // 87
+console.log(feedback.verdict);      // Overall verdict statement
+console.log(feedback.strengths);    // Array of 3 strengths
+console.log(feedback.concerns);     // Array of 3 concerns
+```
+
+### Evaluation Criteria
+The AI judge evaluates projects based on:
+1. **Innovation and creativity** - How novel and creative is the solution?
+2. **Technical implementation** - Quality and complexity of the technical approach
+3. **Problem-solution fit** - Does it solve a real problem effectively?
+4. **Potential impact** - Market opportunity and scalability
+5. **Presentation quality** - Clarity of communication and documentation
+
+### Output Format
+- **score**: Number between 1-100 representing overall project quality
+- **verdict**: Concise overall assessment (1-2 sentences)
+- **strengths**: Array of 3 key strengths identified
+- **concerns**: Array of 3 areas for improvement or potential weaknesses

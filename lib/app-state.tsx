@@ -32,6 +32,10 @@ type AppState = {
   saveProject: (projectId: string, update: Pick<Project, "name" | "summary">) => void;
   castVote: (winnerId: string) => void;
   resetVoting: () => void;
+  // Blind voting mode state
+  isBlindMode: boolean;
+  toggleBlindMode: () => void;
+  setBlindMode: (enabled: boolean) => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -52,6 +56,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [voteHistory, setVoteHistory] = useState<VoteRecord[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authPromptAction, setAuthPromptAction] = useState("continue");
+
+  // Blind voting mode state
+  const [isBlindMode, setIsBlindMode] = useState(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -137,6 +144,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     voteHistory,
     currentPair,
     authPromptAction,
+    // Blind mode functions
+    isBlindMode,
+    toggleBlindMode: () => setIsBlindMode((prev) => !prev),
+    setBlindMode: setIsBlindMode,
     login: async (name, email) => {
       const normalizedEmail = email.trim().toLowerCase();
       if (!normalizedEmail) return;
