@@ -38,7 +38,7 @@ export default function LeaderboardPage() {
             setLoading(false);
             return;
           }
-          currentHackathonId = hackathonData.id;
+          currentHackathonId = (hackathonData as { id: string }).id;
         }
 
         let projectsQuery = supabase.from("projects").select("id, name, elo_rating");
