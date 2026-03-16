@@ -30,24 +30,20 @@ export default function AdminDashboard() {
         // Get project counts per hackathon
         const { data: projects } = await supabase
           .from("projects")
-          .select("hackathon_id");
+          .select("hackathon_id, created_by_user_id");
 
         // Get vote counts per hackathon
         const { data: votes } = await supabase
           .from("votes")
           .select("hackathon_id");
 
-        // Get participant counts (unique users who created projects)
-        const { data: participants } = await supabase
-          .from("projects")
-          .select("created_by_user_id");
-
         const hackathonStats: HackathonStats[] = (hackathons || []).map((h) => {
-          const projectCount = projects?.filter(p => p.hackathon_id === h.id).length || 0;
-          const voteCount = votes?.filter(v => v.hackathon_id === h.id).length || 0;
-          const participantCount = participants?.filter(p => 
-            projects?.some(proj => proj.hackathon_id === h.id && proj.created_by_user_id === p.created_by_user_id)
-          ).length || 0;
+          const projectCount = (projects as any[])?.filter(p => p.hackathon_id === h.id).length || 0;
+          const voteCount = (votes as any[])?.filter(v => v.hackathon_id === h.id).length || 0;
+          
+          // Get unique participants for this hackathon
+          const hackathonProjects = (projects as any[])?.filter(p => p.hackathon_id === h.id) || [];
+          const participantCount = [...new Set(hackathonProjects.map(p => p.created_by_user_id))].length;
 
           return {
             id: h.id,
