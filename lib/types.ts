@@ -1,3 +1,16 @@
+export type Organization = {
+  id: string;
+  name: string;
+  customDomain?: string; // New: For custom domain support
+  webhookUrl?: string; // New: For webhook integrations
+};
+
+export type User = {
+  id: string;
+  name: string;
+  organizationId: string; // Assuming a primary organization for simplicity
+};
+
 export type Project = { 
   id: string; 
   name: string; 
@@ -12,6 +25,7 @@ export type Project = {
   created_at?: string; 
   updated_at?: string; 
   elo_rating?: number; // Elo rating for voting system
+  organizationId: string; // New: For multi-tenancy
 }; 
 
 export type VotePair = { 
