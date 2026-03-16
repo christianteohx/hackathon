@@ -13,11 +13,13 @@ import type {
   ProjectMembershipRole,
   UserProfile
 } from "@/types/project";
+import { sendEmail } from "./emailService"; // Import the email service
+import { sendWebhook } from "./webhookService"; // Import the webhook service
 
 type ProjectMembershipRow =
   Database["public"]["Tables"]["project_members"]["Row"];
-type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
-type UserProfileRow = Database["public"]["Tables"]["users"]["Row"];
+type ProjectRow = Database["public"]["Tables"]["projects"]["Row"] & { organization_id: string };
+type UserProfileRow = Database["public"]["Tables"]["users"]["Row"] & { organization_id: string };
 type TypedSupabaseClient = SupabaseClient<Database>;
 
 function mapAuthUser(user: User, profile: UserProfile): AuthUser {
@@ -33,7 +35,8 @@ function mapUserProfile(row: UserProfileRow): UserProfile {
     displayName: row.display_name,
     email: row.email,
     id: row.id,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
+    organizationId: row.organization_id
   };
 }
 
@@ -57,7 +60,8 @@ function mapProject(row: ProjectRow): Project {
     joinCode: row.join_code,
     name: row.name,
     tagline: row.tagline,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
+    organizationId: row.organization_id
   };
 }
 
@@ -80,7 +84,7 @@ export async function ensureUserProfile(
     error: existingProfileError
   } = await supabase
     .from("users")
-    .select("*")
+    .select("*, organization_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -91,6 +95,8 @@ export async function ensureUserProfile(
   const timestamp = new Date().toISOString();
 
   if (!existingProfile) {
+    const defaultOrganizationId = "org-default"; // Assign a default organization for new users
+
     const {
       data: createdProfile,
       error: createProfileError
@@ -101,9 +107,10 @@ export async function ensureUserProfile(
         display_name: null,
         email,
         id: user.id,
-        updated_at: timestamp
+        updated_at: timestamp,
+        organization_id: defaultOrganizationId
       })
-      .select("*")
+      .select("*, organization_id")
       .single();
 
     if (createProfileError) {
@@ -124,7 +131,7 @@ export async function ensureUserProfile(
         updated_at: timestamp
       })
       .eq("id", user.id)
-      .select("*")
+      .select("*, organization_id")
       .single();
 
     if (updateProfileError) {
@@ -160,7 +167,7 @@ async function getProjectForMembership(
 ) {
   const { data, error } = await supabase
     .from("projects")
-    .select("*")
+    .select("*, organization_id")
     .eq("id", membership.project_id)
     .single();
 
@@ -229,7 +236,7 @@ export async function updateProfileForUser(
       updated_at: new Date().toISOString()
     })
     .eq("id", userId)
-    .select("*")
+    .select("*, organization_id")
     .single();
 
   if (error) {
@@ -273,7 +280,8 @@ export async function createProjectForUser(
         join_code: joinCode,
         name: input.name,
         tagline: input.tagline,
-        updated_at: timestamp
+        updated_at: timestamp,
+        organization_id: profile.organizationId // Add organization_id here
       }
     );
 
@@ -301,7 +309,7 @@ export async function createProjectForUser(
 
     const { data: projectRow, error: projectError } = await supabase
       .from("projects")
-      .select("*")
+      .select("*, organization_id")
       .eq("id", projectId)
       .single();
 
@@ -309,7 +317,30 @@ export async function createProjectForUser(
       throw new Error(projectError.message);
     }
 
-    return mapProject(projectRow);
+    const project = mapProject(projectRow);
+    const userEmail = user.email || profile.email; 
+    if (userEmail) {
+      await sendEmail(
+        userEmail,
+        `Project "${project.name}" Created Successfully!`,
+        `Dear ${profile.displayName || user.email},
+
+Your project "${project.name}" has been successfully created with Join Code: ${project.joinCode}.
+
+You can access it here: [Link to project page - placeholder]
+
+Thank you for using our hackathon app!`
+      );
+    }
+    await sendWebhook(project.organizationId, "project.created", {
+      projectId: project.id,
+      projectName: project.name,
+      createdBy: user.id,
+      organizationId: project.organizationId,
+      joinCode: project.joinCode,
+    });
+
+    return project;
   }
 
   throw new Error("Failed to generate a unique join code.");
@@ -363,7 +394,7 @@ export async function joinProjectByCodeForUser(
 
   const { data: projectRow, error: projectError } = await supabase
     .from("projects")
-    .select("*")
+    .select("*, organization_id")
     .eq("id", projectId)
     .single();
 
@@ -400,12 +431,37 @@ export async function updateProjectForUser(
       updated_at: new Date().toISOString()
     })
     .eq("id", membershipRow.project_id)
-    .select("*")
+    .select("*, organization_id")
     .single();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return mapProject(data);
+  const project = mapProject(data);
+  await sendWebhook(project.organizationId, "project.updated", {
+    projectId: project.id,
+    projectName: project.name,
+    updatedBy: user.id,
+    organizationId: project.organizationId,
+    updatedFields: input,
+  });
+
+  return project;
+}
+
+export async function getProjectsByOrganization(
+  supabase: TypedSupabaseClient,
+  organizationId: string
+): Promise<Project[]> {
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*, organization_id")
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data.map(mapProject);
 }
