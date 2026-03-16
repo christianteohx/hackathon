@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 
+interface Hackathon {
+  id: string;
+}
+
 interface TeamVote {
   id: string;
   name: string;
@@ -38,7 +42,7 @@ export default function LeaderboardPage() {
             setLoading(false);
             return;
           }
-          currentHackathonId = (hackathonData as { id: string }).id;
+          currentHackathonId = (hackathonData as Hackathon).id;
         }
 
         let projectsQuery = supabase.from("projects").select("id, name, elo_rating");
