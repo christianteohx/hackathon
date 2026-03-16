@@ -3,13 +3,14 @@
 
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
-import { buildVotePairs } from "./mockData";
+import { buildVotePairs, MOCK_PROJECTS } from "./mockData";
 import { Project, VotePair, VoteRecord } from "./types";
 import { supabase } from "@/lib/supabase";
 import { calculateNewEloRatings } from "./elo";
+import { updateEloAfterVote, getProjectElo } from "./elo-service";
 
 type SessionUser = {
-  id: string; // Add user ID
+  id: string;
   name: string;
   email: string;
   projectId: string | null;
@@ -33,7 +34,6 @@ type AppState = {
   saveProject: (projectId: string, update: Pick<Project, "name" | "summary">) => void;
   castVote: (winnerId: string) => void;
   resetVoting: () => void;
-  // Blind voting mode state
   isBlindMode: boolean;
   toggleBlindMode: () => void;
   setBlindMode: (enabled: boolean) => void;
@@ -57,15 +57,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [voteHistory, setVoteHistory] = useState<VoteRecord[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authPromptAction, setAuthPromptAction] = useState("continue");
-
-  // Blind voting mode state
   const [isBlindMode, setIsBlindMode] = useState(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
-      // Fetch user session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
       if (sessionError) {
         console.error("Error fetching session:", sessionError);
         setIsAuthed(false);
@@ -76,7 +72,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           .select("name, projectId")
           .eq("id", session.user.id)
           .single();
-
         if (profileError) {
           console.error("Error fetching profile:", profileError);
           setIsAuthed(false);
@@ -92,31 +87,43 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Fetch projects
       const { data: fetchedProjects, error: projectsError } = await supabase
-        .from("projects")
-        .select("*");
+ .from("projects")
+ .select("*");
+ if (projectsError) {
+ console.error("Error fetching projects:", projectsError);
+ console.log("Falling back to mock projects data due to error");
+ setProjects(MOCK_PROJECTS);
+ } else if (fetchedProjects && fetchedProjects.length > 0) {
+ const mappedProjects = (fetchedProjects || []).map((p) => ({
+ ...p,
+ summary: p.description,
+ joinCode: p.join_code,
+ elo_rating: p.elo_rating ?? 1200,
+ }));
+ setProjects(mappedProjects as Project[]);
+ } else {
+ console.log("No projects in database, falling back to mock projects data");
+ setProjects(MOCK_PROJECTS);
+ }
 
-      if (projectsError) {
-        console.error("Error fetching projects:", projectsError);
-        setProjects([]);
-      } else {
-        const mappedProjects = (fetchedProjects || []).map((p) => ({ ...p, summary: p.description, joinCode: p.join_code, }));
-      setProjects(mappedProjects as Project[]);
-      }
-
-      // Fetch vote history for the current user (if authed)
-      // For simplicity, we'll fetch all votes for now and filter later if needed for a specific user.
-      // A better approach would be to filter by user_id in the DB query if RLS is set up.
-      const { data: fetchedVotes, error: votesError } = await supabase
+ const { data: fetchedVotes, error: votesError } = await supabase
         .from("votes")
         .select("*");
-
       if (votesError) {
         console.error("Error fetching votes:", votesError);
         setVoteHistory([]);
       } else {
-  const mappedVotes = (fetchedVotes || []).map((vote) => ({ ...vote, pairId: `${vote.left_project_id}__${vote.right_project_id}`, winnerId: vote.winner_project_id, loserId: vote.winner_project_id === vote.left_project_id ? vote.right_project_id : vote.left_project_id, at: vote.created_at, }));
+        const mappedVotes = (fetchedVotes || []).map((vote) => ({
+          ...vote,
+          pairId: `${vote.left_project_id}__${vote.right_project_id}`,
+          winnerId: vote.winner_project_id,
+          loserId: vote.winner_project_id === vote.left_project_id
+            ? vote.right_project_id
+            : vote.left_project_id,
+          at: vote.created_at,
+        }));
+        setVoteHistory(mappedVotes);
       }
 
       setHydrated(true);
@@ -129,9 +136,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setVotePairs(buildVotePairs(projects));
   }, [projects]);
 
-
-
-  const votedPairIds = useMemo(() => new Set(voteHistory.map((vote) => vote.pairId)), [voteHistory]);
+  const votedPairIds = useMemo(
+    () => new Set(voteHistory.map((vote) => vote.pairId)),
+    [voteHistory]
+  );
 
   const currentPair = useMemo(() => {
     return votePairs.find((pair) => !votedPairIds.has(pair.id)) ?? null;
@@ -145,7 +153,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     voteHistory,
     currentPair,
     authPromptAction,
-    // Blind mode functions
     isBlindMode,
     toggleBlindMode: () => setIsBlindMode((prev) => !prev),
     setBlindMode: setIsBlindMode,
@@ -153,31 +160,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const normalizedEmail = email.trim().toLowerCase();
       if (!normalizedEmail) return;
 
-      const { data: { user: supabaseUser }, error: authError } = await supabase.auth.signInWithOtp({ email: normalizedEmail });
-
+      const { data: { user: supabaseUser }, error: authError } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+      });
       if (authError) {
         console.error("Error logging in:", authError);
         return;
       }
-
       if (supabaseUser) {
-        // Upsert user profile
-      // @ts-expect-error - Supabase type inference issue with profiles table
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .upsert({
-          id: supabaseUser.id,
-          name: name.trim() || normalizedEmail.split("@")[0] || "Hackathon Voter",
-          email: normalizedEmail,
-        } as any)
-        .select()
-        .single();
-
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .upsert({
+            id: supabaseUser.id,
+            name: name.trim() || normalizedEmail.split("@")[0] || "Hackathon Voter",
+            email: normalizedEmail,
+          } as any)
+          .select()
+          .single();
         if (profileError) {
           console.error("Error upserting profile:", profileError);
           return;
         }
-
         setIsAuthed(true);
         setUser({
           id: supabaseUser.id,
@@ -208,7 +211,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (hasValidAuth) {
         return true;
       }
-      // force-clear stale local auth states from older schema
       if (isAuthed && !user?.email) {
         setIsAuthed(false);
         setUser(null);
@@ -222,9 +224,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         console.error("User not authenticated.");
         return;
       }
-
       const joinCode = generateJoinCode(name);
-
       const { data: newProjectData, error: projectError } = await supabase
         .from("projects")
         .insert({
@@ -232,41 +232,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           description: summary.trim(),
           join_code: joinCode,
           created_by_user_id: user.id,
-          // Defaulting optional fields for now
-          tagline: "", 
+          tagline: "",
           demo_url: null,
           github_url: null,
+          elo_rating: 1200,
         })
         .select()
         .single();
-
       if (projectError) {
         console.error("Error creating project:", projectError);
         return;
       }
-
       if (newProjectData) {
-        // Add the creator as an owner in project_members
         const { error: memberError } = await supabase.from("project_members").insert({
           project_id: newProjectData.id,
           user_id: user.id,
           role: "owner",
         });
-
         if (memberError) {
           console.error("Error adding project member:", memberError);
-          // Consider rolling back project creation or handling this error appropriately
           return;
         }
-
         const newProject: Project = {
           id: newProjectData.id,
           name: newProjectData.name,
-          summary: newProjectData.description || "", // Assuming summary maps to description
+          summary: newProjectData.description || "",
           tagline: newProjectData.tagline || "",
-          owner: user.name, // Display name of the owner
+          owner: user.name,
           joinCode: newProjectData.join_code,
           created_by_user_id: newProjectData.created_by_user_id,
+          elo_rating: 1200,
         };
         setProjects((prev) => [...prev, newProject]);
         setUser((prev) => ({
@@ -286,23 +281,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         .select("id")
         .eq("join_code", normalized)
         .single();
-
       if (projectError || !project) {
         console.error("Error finding project by join code:", projectError?.message);
         return { ok: false, message: "Join code not found. Try again." };
       }
-
-      // Update user's profile with the new projectId
       const { error: profileUpdateError } = await supabase
         .from("profiles")
         .update({ projectId: project.id })
         .eq("id", user.id);
-
       if (profileUpdateError) {
         console.error("Error updating user project ID:", profileUpdateError);
         return { ok: false, message: "Failed to join project." };
       }
-
       setUser((prev) => ({
         name: prev?.name ?? "Hackathon Voter",
         email: prev?.email ?? "",
@@ -315,15 +305,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         .from("projects")
         .update({
           name: update.name.trim(),
-          description: update.summary.trim(), // Assuming summary maps to description
+          description: update.summary.trim(),
         })
         .eq("id", projectId);
-
       if (error) {
         console.error("Error saving project:", error);
         return;
       }
-
       setProjects((prev) =>
         prev.map((project) =>
           project.id === projectId
@@ -339,14 +327,21 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }
       if (!currentPair) return;
 
-      const loserId = currentPair.leftProjectId === winnerId ? currentPair.rightProjectId : currentPair.leftProjectId;
+      const loserId =
+        currentPair.leftProjectId === winnerId
+          ? currentPair.rightProjectId
+          : currentPair.leftProjectId;
 
-      const { data: newVote, error: voteError } = await supabase.from("votes").insert({
-        left_project_id: currentPair.leftProjectId,
-        right_project_id: currentPair.rightProjectId,
-        winner_project_id: winnerId,
-        session_id: user.id, // Using user.id as session_id for now
-      }).select().single();
+      const { data: newVote, error: voteError } = await supabase
+        .from("votes")
+        .insert({
+          left_project_id: currentPair.leftProjectId,
+          right_project_id: currentPair.rightProjectId,
+          winner_project_id: winnerId,
+          session_id: user.id,
+        })
+        .select()
+        .single();
 
       if (voteError) {
         console.error("Error casting vote:", voteError);
@@ -354,6 +349,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }
 
       if (newVote) {
+        // Update Elo ratings after vote
+        const result = await updateEloAfterVote(winnerId, loserId);
+        if (result) {
+          console.log(
+            `Elo updated: ${winnerId} -> ${result.winnerNewRating}, ${loserId} -> ${result.loserNewRating}`
+          );
+        }
+
+        // Refresh projects from server to get updated Elo ratings
+        const { data: updatedProjects } = await supabase.from("projects").select("*");
+        if (updatedProjects) {
+          setProjects(
+            updatedProjects.map((p) => ({
+              ...p,
+              summary: p.description,
+              joinCode: p.join_code,
+              elo_rating: p.elo_rating ?? 1200,
+            }))
+          );
+        }
+
         setVoteHistory((prev) => [
           ...prev,
           {
@@ -370,8 +386,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         console.error("User not authenticated.");
         return;
       }
-      // In a real scenario, this would delete votes associated with the user/session
-      // For now, we'll just clear local state, or implement a more robust delete later
       setVoteHistory([]);
     },
   };

@@ -5,10 +5,10 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createServerSupabaseClient();
 
-    // Fetch all projects
+    // Fetch all projects with Elo ratings
     const { data: projects, error: projectsError } = await supabase
       .from('projects')
-      .select('id, name');
+      .select('id, name, elo_rating');
 
     if (projectsError) {
       console.error('Error fetching projects:', projectsError);
@@ -38,27 +38,29 @@ export async function GET(request: NextRequest) {
       voteCounts.set(projectId, (voteCounts.get(projectId) || 0) + 1);
     });
 
-    // Build leaderboard data with vote counts
+    // Build leaderboard data with Elo ratings
     const teamData = (projects || []).map((project) => ({
       id: project.id,
       name: project.name,
+      eloRating: project.elo_rating ?? 1200,
       voteCount: voteCounts.get(project.id) || 0,
     }));
 
-    // Sort by vote count (descending) and assign ranks
-    teamData.sort((a, b) => b.voteCount - a.voteCount);
+    // Sort by Elo rating (descending) and assign ranks
+    teamData.sort((a, b) => b.eloRating - a.eloRating);
 
     // Add rank
     const rankedData = teamData.map((team, index) => ({
       rank: index + 1,
       team: team.name,
+      eloRating: team.eloRating,
       votes: team.voteCount,
     }));
 
-    // Convert to CSV with required columns: Rank, Project Name, Team Name, Vote Score
-    const csvHeader = 'Rank,Project Name,Team Name,Vote Score\n';
+    // Convert to CSV with Elo ratings
+    const csvHeader = 'Rank,Project Name,Elo Rating,Vote Score\n';
     const csvRows = rankedData
-      .map((row) => `${row.rank},"${row.team}","${row.team}",${row.votes}`)
+      .map((row) => `${row.rank},"${row.team}",${row.eloRating},${row.votes}`)
       .join('\n');
     const csvData = csvHeader + csvRows;
 
