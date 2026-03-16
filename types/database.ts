@@ -111,7 +111,7 @@ export type Database = {
           id?: string;
           join_code: string;
           name: string;
-          tagline?: string;
+          tagline?: string; team_name?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -133,7 +133,7 @@ export type Database = {
           id: string;
           join_code: string;
           name: string;
-          tagline: string;
+          tagline: string; team_name: string | null;
           updated_at: string;
         };
         Update: {
@@ -146,7 +146,7 @@ export type Database = {
           id?: string;
           join_code?: string;
           name?: string;
-          tagline?: string;
+          tagline?: string; team_name?: string | null;
           updated_at?: string;
         };
       };
