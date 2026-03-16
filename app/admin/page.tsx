@@ -49,10 +49,10 @@ export default function AdminDashboard() {
           .select("hackathon_id");
 
         const hackathonStats: HackathonStats[] = (hackathons || []).map((h: Hackathon) => {
-          const projectCount = (projects as Project[])?.filter(p => p.hackathon_id === h.id).length || 0;
-          const voteCount = (votes as Vote[])?.filter(v => v.hackathon_id === h.id).length || 0;
+          const projectCount = (projects as unknown as Project[])?.filter(p => p.hackathon_id === h.id).length || 0;
+          const voteCount = (votes as unknown as Vote[])?.filter(v => v.hackathon_id === h.id).length || 0;
           
-          const hackathonProjects = (projects as Project[])?.filter(p => p.hackathon_id === h.id) || [];
+          const hackathonProjects = (projects as unknown as Project[])?.filter(p => p.hackathon_id === h.id) || [];
           const participantCount = [...new Set(hackathonProjects.map(p => p.created_by_user_id))].length;
 
           return {
