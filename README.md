@@ -51,3 +51,11 @@ If you use `/api/test-db`, set:
 SUPABASE_URL=your-supabase-url
 SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
+
+## Quick Access QR Code
+
+Scan this QR code to quickly access the project page.
+
+![QR Code](https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com/hackathon-project)
+
+**Note:** The QR code currently links to `https://example.com/hackathon-project`. Please replace `https://example.com/hackathon-project` in the Markdown with the actual deployed URL of your project.
