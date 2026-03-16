@@ -26,7 +26,7 @@ export default function LeaderboardPage() {
       setLoading(true);
       try {
         const searchParams = new URLSearchParams(window.location.search);
-        const hackathonSlug = searchParams.get('hackathon') || 'default-hackathon'; // Default to 'default-hackathon'
+        const hackathonSlug = searchParams.get('hackathon'); // Show all if no hackathon specified
 
         let currentHackathonId: string | null = null;
         if (hackathonSlug) {
