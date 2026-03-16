@@ -8,6 +8,15 @@ export type Database = {
         Returns: string | null;
       };
       ping: { Args: Record<string, never>; Returns: number };
+      update_elo_ratings: {
+        Args: {
+          p_winner_id: string;
+          p_winner_new_rating: number;
+          p_loser_id: string;
+          p_loser_new_rating: number;
+        };
+        Returns: void;
+      };
     };
     Tables: {
       project_members: {
@@ -97,6 +106,7 @@ export type Database = {
           created_by_user_id: string;
           demo_url?: string | null;
           description?: string;
+          elo_rating?: number;
           github_url?: string | null;
           id?: string;
           join_code: string;
@@ -118,6 +128,7 @@ export type Database = {
           created_by_user_id: string;
           demo_url: string | null;
           description: string;
+          elo_rating: number;
           github_url: string | null;
           id: string;
           join_code: string;
@@ -130,6 +141,7 @@ export type Database = {
           created_by_user_id?: string;
           demo_url?: string | null;
           description?: string;
+          elo_rating?: number;
           github_url?: string | null;
           id?: string;
           join_code?: string;
@@ -160,6 +172,55 @@ export type Database = {
           email?: string;
           id?: string;
           updated_at?: string;
+        };
+      };
+      votes: {
+        Insert: {
+          id?: string;
+          left_project_id: string;
+          right_project_id: string;
+          winner_project_id: string;
+          session_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            columns: ["left_project_id"];
+            foreignKeyName: "votes_left_project_id_fkey";
+            isOneToOne: false;
+            referencedColumns: ["id"];
+            referencedRelation: "projects";
+          },
+          {
+            columns: ["right_project_id"];
+            foreignKeyName: "votes_right_project_id_fkey";
+            isOneToOne: false;
+            referencedColumns: ["id"];
+            referencedRelation: "projects";
+          },
+          {
+            columns: ["winner_project_id"];
+            foreignKeyName: "votes_winner_project_id_fkey";
+            isOneToOne: false;
+            referencedColumns: ["id"];
+            referencedRelation: "projects";
+          }
+        ];
+        Row: {
+          id: string;
+          left_project_id: string;
+          right_project_id: string;
+          winner_project_id: string;
+          session_id: string | null;
+          created_at: string;
+        };
+        Update: {
+          id?: string;
+          left_project_id?: string;
+          right_project_id?: string;
+          winner_project_id?: string;
+          session_id?: string;
+          created_at?: string;
         };
       };
     };

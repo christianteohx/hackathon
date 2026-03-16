@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 interface TeamVote {
   id: string;
   name: string;
+  eloRating: number;
   voteCount: number;
   rank: number;
 }
@@ -18,10 +19,10 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        // Fetch all projects
+        // Fetch all projects with Elo ratings
         const { data: projects, error: projectsError } = await supabase
           .from("projects")
-          .select("id, name");
+          .select("id, name, elo_rating");
 
         if (projectsError) {
           console.error("Error fetching projects:", projectsError);
@@ -49,16 +50,17 @@ export default function LeaderboardPage() {
           voteCounts.set(projectId, (voteCounts.get(projectId) || 0) + 1);
         });
 
-        // Build leaderboard data with vote counts
+        // Build leaderboard data with Elo ratings and vote counts
         const teamData = (projects || []).map((project) => ({
           id: project.id,
           name: project.name,
+          eloRating: project.elo_rating ?? 1200,
           voteCount: voteCounts.get(project.id) || 0,
           rank: 0,
         }));
 
-        // Sort by vote count (descending) and assign ranks
-        teamData.sort((a, b) => b.voteCount - a.voteCount);
+        // Sort by Elo rating (descending) and assign ranks
+        teamData.sort((a, b) => b.eloRating - a.eloRating);
         teamData.forEach((team, index) => {
           team.rank = index + 1;
         });
@@ -143,9 +145,9 @@ export default function LeaderboardPage() {
     color: "#3b82f6",
   };
 
-  const scoreStyle: React.CSSProperties = {
+  const eloStyle: React.CSSProperties = {
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#10b981",
   };
 
   const downloadButtonStyle: React.CSSProperties = {
@@ -168,7 +170,7 @@ export default function LeaderboardPage() {
     return (
       <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-8">
         <h1 className="text-2xl font-semibold">Leaderboard</h1>
-        <p className="text-slate-600">Loading vote counts...</p>
+        <p className="text-slate-600">Loading Elo ratings...</p>
       </main>
     );
   }
@@ -176,8 +178,9 @@ export default function LeaderboardPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-8">
       <h1 className="text-2xl font-semibold">Leaderboard</h1>
-      <p className="text-slate-600">Search and view leaderboard results.</p>
-
+      <p className="text-slate-600">
+        Projects ranked by Elo rating. Higher rating = better performance!
+      </p>
       <button
         onClick={handleDownloadCSV}
         style={downloadButtonStyle}
@@ -201,7 +204,6 @@ export default function LeaderboardPage() {
         </svg>
         Download CSV
       </button>
-
       <input
         type="text"
         placeholder="Search teams..."
@@ -211,7 +213,6 @@ export default function LeaderboardPage() {
         onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
         onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
       />
-
       {filteredData.length === 0 ? (
         <div style={noResultsStyle}>
           No teams found matching "{searchTerm}"
@@ -222,6 +223,7 @@ export default function LeaderboardPage() {
             <tr>
               <th style={thStyle}>Rank</th>
               <th style={thStyle}>Team</th>
+              <th style={thStyle}>Elo Rating</th>
               <th style={thStyle}>Votes</th>
             </tr>
           </thead>
@@ -230,13 +232,13 @@ export default function LeaderboardPage() {
               <tr key={team.id}>
                 <td style={{ ...tdStyle, ...rankStyle }}>{team.rank}</td>
                 <td style={tdStyle}>{team.name}</td>
-                <td style={{ ...tdStyle, ...scoreStyle }}>{team.voteCount}</td>
+                <td style={{ ...tdStyle, ...eloStyle }}>{team.eloRating}</td>
+                <td style={tdStyle}>{team.voteCount}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
-
       <Link href="/">Back home</Link>
     </main>
   );
