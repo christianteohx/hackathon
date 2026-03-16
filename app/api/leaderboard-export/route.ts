@@ -55,10 +55,10 @@ export async function GET(request: NextRequest) {
       votes: team.voteCount,
     }));
 
-    // Convert to CSV
-    const csvHeader = 'Rank,Team,Votes\n';
+    // Convert to CSV with required columns: Rank, Project Name, Team Name, Vote Score
+    const csvHeader = 'Rank,Project Name,Team Name,Vote Score\n';
     const csvRows = rankedData
-      .map((row) => `${row.rank},"${row.team}",${row.votes}`)
+      .map((row) => `${row.rank},"${row.team}","${row.team}",${row.votes}`)
       .join('\n');
     const csvData = csvHeader + csvRows;
 
