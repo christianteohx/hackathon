@@ -6,6 +6,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { buildVotePairs } from "./mockData";
 import { Project, VotePair, VoteRecord } from "./types";
 import { supabase } from "@/lib/supabase";
+import { calculateNewEloRatings } from "./elo";
 
 type SessionUser = {
   id: string; // Add user ID
