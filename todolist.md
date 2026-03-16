@@ -165,15 +165,15 @@ Page: `/admin`
 
 ## AI Judge
 
-- [ ] Persona: Shark Tank judge
-- [ ] Persona: Technical judge
+- [x] Persona: Shark Tank judge
+- [x] Persona: Technical judge
 
 Output:
 
-- [ ] score
-- [ ] verdict
-- [ ] strengths
-- [ ] concerns
+- [x] score
+- [x] verdict
+- [x] strengths
+- [x] concerns
 
 ---
 
