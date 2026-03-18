@@ -44,12 +44,12 @@ export default function HomePage() {
 
   return (
     <main className="w-full min-h-screen flex flex-col gap-8 p-8 bg-white">
-      <div className="flex flex-col items-center justify-center py-16 px-4 bg-gradient-to-br from-white to-indigo-50 rounded-lg shadow-inner text-center">
-        <h1 className="text-5xl font-extrabold text-indigo-primary tracking-tight leading-tight">Hackathon Voting Platform</h1>
+      <div className="flex flex-col items-center justify-center py-16 px-4 bg-gradient-to-br from-white to-purple-50 rounded-lg shadow-inner text-center">
+        <h1 className="text-5xl font-extrabold text-purple-700 tracking-tight leading-tight">Hackathon Voting Platform</h1>
         <p className="mt-4 text-lg text-gray-700 max-w-md">Discover, explore, and vote on innovative projects from the brightest minds.</p>
       </div>
 
-      <h2 className="text-3xl font-extrabold text-indigo-primary text-center mt-12 mb-8">Active Hackathons</h2>
+      <h2 className="text-3xl font-extrabold text-purple-700 text-center mt-12 mb-8">Active Hackathons</h2>
 
       {hackathons.length === 0 ? (
         <div className="rounded-xl bg-white p-6 text-center shadow-md">

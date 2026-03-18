@@ -79,7 +79,7 @@ export function VoteDuel({
         <button
           type="button"
           onClick={handleContinue}
-          className="w-full rounded-xl bg-indigo-600 text-white px-4 py-3 text-lg font-bold shadow-md hover:bg-indigo-700 transition-all duration-200"
+          className="w-full rounded-xl bg-purple-700 text-white px-4 py-3 text-lg font-bold shadow-md hover:bg-purple-800 transition-all duration-200"
         >
           Continue to Next Vote
         </button>
@@ -106,7 +106,7 @@ export function VoteDuel({
           <button
             type="button"
             onClick={() => handleVote(left.id)}
-            className="w-full rounded-xl bg-indigo-600 text-white px-4 py-3 text-lg font-bold shadow-md hover:bg-indigo-700 transition-all duration-200"
+            className="w-full rounded-xl bg-purple-700 text-white px-4 py-3 text-lg font-bold shadow-md hover:bg-purple-800 transition-all duration-200"
           >
             Vote Left
           </button>
@@ -123,7 +123,7 @@ export function VoteDuel({
           <button
             type="button"
             onClick={() => handleVote(right.id)}
-            className="w-full rounded-xl bg-amber-500 text-white px-4 py-3 text-lg font-bold shadow-md hover:bg-amber-600 transition-all duration-200"
+            className="w-full rounded-xl bg-purple-700 text-white px-4 py-3 text-lg font-bold shadow-md hover:bg-purple-800 transition-all duration-200"
           >
             Vote Right
           </button>
