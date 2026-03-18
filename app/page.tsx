@@ -43,7 +43,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-8 p-12 bg-white">
+    <main className="w-full min-h-screen flex flex-col gap-8 p-8 bg-white">
       <div className="flex flex-col items-center justify-center py-16 px-4 bg-gradient-to-br from-white to-indigo-50 rounded-lg shadow-inner text-center">
         <h1 className="text-5xl font-extrabold text-indigo-primary tracking-tight leading-tight">Hackathon Voting Platform</h1>
         <p className="mt-4 text-lg text-gray-700 max-w-md">Discover, explore, and vote on innovative projects from the brightest minds.</p>
