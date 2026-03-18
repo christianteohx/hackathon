@@ -18,6 +18,7 @@ export default function VotePage() {
     isBlindMode,
     toggleBlindMode,
   } = useAppState();
+
   const router = useRouter();
 
   useEffect(() => {
@@ -62,12 +63,9 @@ export default function VotePage() {
   }
 
   return (
-    <AppShell
-      title="Voting Flow"
-      subtitle="Record votes and continue until all project matchups are done."
-    >
+    <AppShell title="Voting Flow" subtitle="Record votes and continue until all project matchups are done.">
       {/* Blind Mode Toggle */}
-      <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className="mb-8 rounded-xl bg-gradient-to-br from-white to-blue-50 p-6 shadow-md border border-blue-100">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-900">
@@ -86,9 +84,7 @@ export default function VotePage() {
             }`}
             aria-pressed={isBlindMode}
             aria-label={
-              isBlindMode
-                ? "Disable blind voting mode"
-                : "Enable blind voting mode"
+              isBlindMode ? "Disable blind voting mode" : "Enable blind voting mode"
             }
           >
             <span className="sr-only">Toggle blind voting mode</span>
@@ -102,7 +98,9 @@ export default function VotePage() {
         <div className="mt-3 flex items-center gap-2">
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              isBlindMode ? "bg-slate-900 text-white" : "bg-slate-200 text-slate-700"
+              isBlindMode
+                ? "bg-slate-900 text-white"
+                : "bg-slate-200 text-slate-700"
             }`}
           >
             {isBlindMode ? "✓ Blind mode ON" : "Blind mode OFF"}

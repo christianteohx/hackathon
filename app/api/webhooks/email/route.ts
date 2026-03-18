@@ -1,11 +1,9 @@
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { Resend } from 'resend'; 
 
 export async function POST(request: Request) {
   try {
     const { to, subject, body } = await request.json();
-
+    
     if (!to || !subject || !body) {
       return new Response(JSON.stringify({ error: 'Missing required fields: to, subject, body' }), {
         status: 400,
@@ -15,6 +13,17 @@ export async function POST(request: Request) {
       });
     }
 
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (!resendApiKey) {
+      return new Response(JSON.stringify({ error: 'Resend API key not configured' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
+    const resend = new Resend(resendApiKey);
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', // Replace with your verified domain
       to: to,

@@ -43,15 +43,17 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 p-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Hackathon Voting</h1>
-        <p className="mt-2 text-slate-600">Select a hackathon to get started</p>
+    <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-8 p-12 bg-white">
+      <div className="flex flex-col items-center justify-center py-16 px-4 bg-gradient-to-br from-white to-indigo-50 rounded-lg shadow-inner text-center">
+        <h1 className="text-5xl font-extrabold text-indigo-primary tracking-tight leading-tight">Hackathon Voting Platform</h1>
+        <p className="mt-4 text-lg text-gray-700 max-w-md">Discover, explore, and vote on innovative projects from the brightest minds.</p>
       </div>
 
+      <h2 className="text-3xl font-extrabold text-indigo-primary text-center mt-12 mb-8">Active Hackathons</h2>
+
       {hackathons.length === 0 ? (
-        <div className="rounded-lg border border-slate-200 p-6 text-center">
-          <p className="text-slate-600">No active hackathons found.</p>
+        <div className="rounded-xl bg-white p-6 text-center shadow-md">
+          <p className="text-lg text-gray-600">No active hackathons found. Check back soon!</p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -59,7 +61,7 @@ export default function HomePage() {
             <Link
               key={hackathon.id}
               href={`/${hackathon.slug}`}
-              className="block rounded-lg border border-slate-200 p-6 transition hover:border-slate-300 hover:shadow-md"
+              className="block rounded-xl bg-white p-8 shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:ring-2 hover:ring-accent-gold"
             >
               <h2 className="text-xl font-semibold">{hackathon.name}</h2>
               {hackathon.description && (

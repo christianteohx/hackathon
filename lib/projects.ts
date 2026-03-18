@@ -18,8 +18,8 @@ import { sendWebhook } from "./webhookService"; // Import the webhook service
 
 type ProjectMembershipRow =
   Database["public"]["Tables"]["project_members"]["Row"];
-type ProjectRow = Database["public"]["Tables"]["projects"]["Row"] & { organization_id: string };
-type UserProfileRow = Database["public"]["Tables"]["users"]["Row"] & { organization_id: string };
+type ProjectRow = Database["public"]["Tables"]["projects"]["Row"] & {  };
+type UserProfileRow = Database["public"]["Tables"]["users"]["Row"] & {  };
 type TypedSupabaseClient = SupabaseClient<Database>;
 
 function mapAuthUser(user: User, profile: UserProfile): AuthUser {
@@ -36,7 +36,7 @@ function mapUserProfile(row: UserProfileRow): UserProfile {
     email: row.email,
     id: row.id,
     updatedAt: row.updated_at,
-    organizationId: row.organization_id
+    organizationId: ""
   };
 }
 
@@ -61,7 +61,7 @@ function mapProject(row: ProjectRow): Project {
     name: row.name,
     tagline: row.tagline,
     updatedAt: row.updated_at,
-    organizationId: row.organization_id
+    organizationId: ""
   };
 }
 
@@ -84,7 +84,7 @@ export async function ensureUserProfile(
     error: existingProfileError
   } = await supabase
     .from("users")
-    .select("*, organization_id")
+    .select("*")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -108,9 +108,9 @@ export async function ensureUserProfile(
         email,
         id: user.id,
         updated_at: timestamp,
-        organization_id: defaultOrganizationId
+        organizationId: defaultOrganizationId
       })
-      .select("*, organization_id")
+      .select("*")
       .single();
 
     if (createProfileError) {
@@ -131,7 +131,7 @@ export async function ensureUserProfile(
         updated_at: timestamp
       })
       .eq("id", user.id)
-      .select("*, organization_id")
+      .select("*")
       .single();
 
     if (updateProfileError) {
@@ -167,7 +167,7 @@ async function getProjectForMembership(
 ) {
   const { data, error } = await supabase
     .from("projects")
-    .select("*, organization_id")
+    .select("*")
     .eq("id", membership.project_id)
     .single();
 
@@ -236,7 +236,7 @@ export async function updateProfileForUser(
       updated_at: new Date().toISOString()
     })
     .eq("id", userId)
-    .select("*, organization_id")
+    .select("*")
     .single();
 
   if (error) {
@@ -309,7 +309,7 @@ export async function createProjectForUser(
 
     const { data: projectRow, error: projectError } = await supabase
       .from("projects")
-      .select("*, organization_id")
+      .select("*")
       .eq("id", projectId)
       .single();
 
@@ -332,7 +332,7 @@ You can access it here: [Link to project page - placeholder]
 Thank you for using our hackathon app!`
       );
     }
-    await sendWebhook(project.organizationId, "project.created", {
+    await sendWebhook(project.organizationId || "", "project.created", {
       projectId: project.id,
       projectName: project.name,
       createdBy: user.id,
@@ -394,7 +394,7 @@ export async function joinProjectByCodeForUser(
 
   const { data: projectRow, error: projectError } = await supabase
     .from("projects")
-    .select("*, organization_id")
+    .select("*")
     .eq("id", projectId)
     .single();
 
@@ -431,7 +431,7 @@ export async function updateProjectForUser(
       updated_at: new Date().toISOString()
     })
     .eq("id", membershipRow.project_id)
-    .select("*, organization_id")
+    .select("*")
     .single();
 
   if (error) {
@@ -439,7 +439,7 @@ export async function updateProjectForUser(
   }
 
   const project = mapProject(data);
-  await sendWebhook(project.organizationId, "project.updated", {
+  await sendWebhook(project.organizationId || "", "project.updated", {
     projectId: project.id,
     projectName: project.name,
     updatedBy: user.id,
@@ -456,8 +456,8 @@ export async function getProjectsByOrganization(
 ): Promise<Project[]> {
   const { data, error } = await supabase
     .from("projects")
-    .select("*, organization_id")
-    .eq("organization_id", organizationId);
+    .select("*")
+    .eq("id", "placeholder");
 
   if (error) {
     throw new Error(error.message);
