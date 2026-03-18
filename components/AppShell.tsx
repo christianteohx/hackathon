@@ -52,6 +52,6 @@ export function AppShell({
 }
 
 const linkClassName = "text-gray-600 hover:text-indigo-600 transition-colors px-3 py-1 rounded-md text-sm font-medium";
-const goldBtnClassName = "ml-auto px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors shadow-md";
+const goldBtnClassName = "ml-auto px-4 py-2 rounded-md bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors shadow-md";
 const userBadgeClassName = "ml-auto px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800";
 const logoutBtnClassName = "px-3 py-1 rounded-md text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors";
