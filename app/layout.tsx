@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Inter } from "@next/font/google"; // Import Inter font
 import { Providers } from "./providers";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"] }); // Initialize Inter font
 
 export const metadata: Metadata = {
   title: "Hackathon Project Voting",
@@ -15,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={inter.className}> {/* Apply Inter font class */}
         <Providers>{children}</Providers>
       </body>
     </html>

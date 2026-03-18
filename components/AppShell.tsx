@@ -16,45 +16,31 @@ export function AppShell({
   const { isAuthed, user, logout, openAuthModal } = useAppState();
 
   return (
-    <main style={{
-      width: "100%",
-      maxWidth: "600px",
-      margin: "0 auto",
-      padding: "20px 16px",
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      gap: "20px",
-    }}>
-      <header>
-        <nav style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          marginBottom: "12px",
-        }}>
-          <Link href="/" style={linkStyle}>Home</Link>
-          <Link href="/vote" style={linkStyle}>Vote</Link>
-          <Link href="/my" style={linkStyle}>My</Link>
-          <Link href="/leaderboard" style={linkStyle}>Board</Link>
+    <main className="w-full px-8 py-8 min-h-screen flex flex-col space-y-8 bg-white font-inter">
+      <header className="mb-6">
+        <nav className="flex items-center space-x-2 mb-4">
+          <Link href="/" className={linkClassName}>Home</Link>
+          <Link href="/vote" className={linkClassName}>Vote</Link>
+          <Link href="/my" className={linkClassName}>My</Link>
+          <Link href="/leaderboard" className={linkClassName}>Board</Link>
           
           {!isAuthed ? (
-            <button type="button" onClick={() => openAuthModal("sign in")} style={blueBtnStyle}>
+            <button type="button" onClick={() => openAuthModal("sign in")} className={goldBtnClassName}>
               Login
             </button>
           ) : (
             <>
-              <span style={greenBadgeStyle}>{user?.email?.split('@')[0]}</span>
-              <button type="button" onClick={logout} style={redBtnStyle}>Logout</button>
+              <span className={userBadgeClassName}>{user?.email?.split('@')[0]}</span>
+              <button type="button" onClick={logout} className={logoutBtnClassName}>Logout</button>
             </>
           )}
         </nav>
 
-        <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#222", margin: 0 }}>
+        <h1 className="text-3xl font-bold text-gray-900">
           {title}
         </h1>
         {subtitle && (
-          <p style={{ fontSize: "14px", color: "#666", margin: "4px 0 0" }}>
+          <p className="text-sm text-gray-600 mt-1">
             {subtitle}
           </p>
         )}
@@ -65,41 +51,7 @@ export function AppShell({
   );
 }
 
-const linkStyle: React.CSSProperties = {
-  padding: "4px 10px",
-  fontSize: "12px",
-  color: "#555",
-  textDecoration: "none",
-  backgroundColor: "#eee",
-  borderRadius: "4px",
-};
-
-const blueBtnStyle: React.CSSProperties = {
-  padding: "4px 10px",
-  fontSize: "12px",
-  color: "#fff",
-  backgroundColor: "#3b82f6",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-  marginLeft: "auto",
-};
-
-const greenBadgeStyle: React.CSSProperties = {
-  padding: "4px 8px",
-  fontSize: "11px",
-  color: "#16a34a",
-  backgroundColor: "#dcfce7",
-  borderRadius: "4px",
-  marginLeft: "auto",
-};
-
-const redBtnStyle: React.CSSProperties = {
-  padding: "4px 8px",
-  fontSize: "11px",
-  color: "#dc2626",
-  backgroundColor: "#fee2e2",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-};
+const linkClassName = "text-gray-600 hover:text-indigo-600 transition-colors px-3 py-1 rounded-md text-sm font-medium";
+const goldBtnClassName = "ml-auto px-4 py-2 rounded-md bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors shadow-md";
+const userBadgeClassName = "ml-auto px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800";
+const logoutBtnClassName = "px-3 py-1 rounded-md text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors";
