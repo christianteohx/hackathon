@@ -9,25 +9,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: BASE_URL,
-      lastmod: today,
+      lastModified: today,
       changeFrequency: "weekly",
       priority: 1,
     },
     {
       url: `${BASE_URL}/vote`,
-      lastmod: today,
+      lastModified: today,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/submit`,
-      lastmod: today,
+      lastModified: today,
       changeFrequency: "daily",
       priority: 0.8,
     },
     {
       url: `${BASE_URL}/leaderboard`,
-      lastmod: today,
+      lastModified: today,
       changeFrequency: "hourly",
       priority: 0.7,
     },
