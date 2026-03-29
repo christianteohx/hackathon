@@ -75,13 +75,14 @@ export default function VotePage() {
   }
 
   const progress = `${voteHistory.length}/${votePairs.length} matchups voted`;
+  const pair = currentPair;
 
   function handleVote(winnerId: string) {
     if (!requireAuth("cast a vote")) {
       return;
     }
     // Mark this pair as voted using localStorage
-    markPairVoted(currentPair.leftProjectId, currentPair.rightProjectId);
+    markPairVoted(pair.leftProjectId, pair.rightProjectId);
     setVoteCount(getVotedPairs().length);
     castVote(winnerId);
     if (voteHistory.length + 1 >= votePairs.length) {

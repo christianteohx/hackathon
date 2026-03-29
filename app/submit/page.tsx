@@ -21,16 +21,15 @@ export default function SubmitPage() {
     try {
       const { error } = await supabase
         .from("projects")
-        .insert([
-          {
-            team_name: teamName,
-            project_name: projectName,
-            tagline,
-            description,
-            demo_url: demoUrl || null,
-            github_url: githubUrl || null,
-          },
-        ])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .insert([{
+          team_name: teamName,
+          project_name: projectName,
+          tagline,
+          description,
+          demo_url: demoUrl || null,
+          github_url: githubUrl || null,
+        }] as any)
         .select()
         .single();
 
