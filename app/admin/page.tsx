@@ -1,144 +1,58 @@
-"use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+'use client';
 
-interface Hackathon {
-  id: string;
-  name: string;
-  slug: string;
-}
+import { useState } from 'react';
 
-interface Project {
-  hackathon_id: string;
-  created_by_user_id: string;
-}
-
-interface Vote {
-  hackathon_id: string;
-}
-
-interface HackathonStats {
-  id: string;
-  name: string;
-  slug: string;
-  projectCount: number;
-  voteCount: number;
-  participantCount: number;
-}
-
-export default function AdminDashboard() {
-  const [stats, setStats] = useState<HackathonStats[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data: hackathons, error: hackathonError } = await supabase
-          .from("hackathons")
-          .select("id, name, slug");
-
-        if (hackathonError) throw hackathonError;
-
-        const { data: projects } = await supabase
-          .from("projects")
-          .select("hackathon_id, created_by_user_id");
-
-        const { data: votes } = await supabase
-          .from("votes")
-          .select("hackathon_id");
-
-        const hackathonStats: HackathonStats[] = (hackathons || []).map((h: Hackathon) => {
-          const projectCount = (projects as unknown as Project[])?.filter(p => p.hackathon_id === h.id).length || 0;
-          const voteCount = (votes as unknown as Vote[])?.filter(v => v.hackathon_id === h.id).length || 0;
-          
-          const hackathonProjects = (projects as unknown as Project[])?.filter(p => p.hackathon_id === h.id) || [];
-          const participantCount = [...new Set(hackathonProjects.map(p => p.created_by_user_id))].length;
-
-          return {
-            id: h.id,
-            name: h.name,
-            slug: h.slug,
-            projectCount,
-            voteCount,
-            participantCount,
-          };
-        });
-
-        setStats(hackathonStats);
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
-
-  if (loading) {
-    return (
-      <main className="mx-auto max-w-4xl p-8">
-        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-        <p className="mt-4 text-slate-600">Loading...</p>
-      </main>
-    );
-  }
+export default function AdminPage() {
+  const [stats] = useState({
+    totalProjects: 12,
+    totalVotes: 147,
+    activeHackers: 34,
+  });
 
   return (
-    <main className="mx-auto max-w-4xl p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-        <Link href="/" className="text-sm text-slate-600 hover:underline">
-          ← Back home
-        </Link>
-      </div>
+    <main style={{maxWidth: '900px', margin: '0 auto', padding: '2rem 1rem'}}>
+      <h1 style={{fontSize: '1.75rem', fontWeight: 'bold', marginBottom: '0.5rem'}}>
+        🏁 Organizer Dashboard
+      </h1>
+      <p style={{color: '#666', marginBottom: '2rem'}}>Overview of the current hackathon</p>
 
-      <div className="mt-8 grid gap-6">
-        {stats.length === 0 ? (
-          <div className="rounded-lg border border-slate-200 p-6 text-center">
-            <p className="text-slate-600">No hackathons found.</p>
+      {/* Stats Grid */}
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem'}}>
+        {[
+          { label: 'Total Projects', value: stats.totalProjects, emoji: '📁' },
+          { label: 'Total Votes Cast', value: stats.totalVotes, emoji: '🗳️' },
+          { label: 'Active Hackers', value: stats.activeHackers, emoji: '👥' },
+        ].map(({ label, value, emoji }) => (
+          <div key={label} style={{
+            background: '#f9f9f9',
+            border: '1px solid #e5e5e5',
+            borderRadius: '8px',
+            padding: '1.25rem',
+            textAlign: 'center',
+          }}>
+            <div style={{fontSize: '2rem', marginBottom: '0.5rem'}}>{emoji}</div>
+            <div style={{fontSize: '2rem', fontWeight: 'bold'}}>{value}</div>
+            <div style={{fontSize: '0.875rem', color: '#666'}}>{label}</div>
           </div>
-        ) : (
-          stats.map((hackathon) => (
-            <div key={hackathon.id} className="rounded-lg border border-slate-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold">{hackathon.name}</h2>
-                  <p className="text-sm text-slate-500">/{hackathon.slug}</p>
-                </div>
-                <Link href={`/${hackathon.slug}`} className="rounded-lg bg-slate-100 px-4 py-2 text-sm hover:bg-slate-200">
-                  View →
-                </Link>
-              </div>
-
-              <div className="mt-6 grid grid-cols-3 gap-4">
-                <div className="rounded-lg bg-blue-50 p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{hackathon.projectCount}</div>
-                  <div className="text-sm text-blue-600">Projects</div>
-                </div>
-                <div className="rounded-lg bg-green-50 p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{hackathon.voteCount}</div>
-                  <div className="text-sm text-green-600">Votes</div>
-                </div>
-                <div className="rounded-lg bg-purple-50 p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">{hackathon.participantCount}</div>
-                  <div className="text-sm text-purple-600">Participants</div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex gap-4">
-                <Link href={`/leaderboard?hackathon=${hackathon.slug}`} className="text-sm text-blue-600 hover:underline">
-                  Leaderboard
-                </Link>
-                <Link href={`/${hackathon.slug}`} className="text-sm text-blue-600 hover:underline">
-                  Hackathon Page
-                </Link>
-              </div>
-            </div>
-          ))
-        )}
+        ))}
       </div>
+
+      {/* Quick Actions */}
+      <div style={{display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '2rem'}}>
+        <button style={{padding: '8px 16px', borderRadius: '6px', border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer'}}>
+          📊 Export Data
+        </button>
+        <button style={{padding: '8px 16px', borderRadius: '6px', border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer'}}>
+          🔗 Share Voting Link
+        </button>
+        <button style={{padding: '8px 16px', borderRadius: '6px', border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer'}}>
+          📢 Announce Winner
+        </button>
+      </div>
+
+      <p style={{fontSize: '0.875rem', color: '#999', marginTop: '2rem'}}>
+        Note: Stats shown are placeholders. Connect to Supabase to show live data.
+      </p>
     </main>
   );
 }
