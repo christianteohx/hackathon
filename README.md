@@ -1,61 +1,69 @@
-# Hackathon Project Voting UI
+# Hackathon Voting Platform
 
-Next.js 14 + TypeScript + Tailwind prototype for a hackathon voting and team membership flow.
+Next.js 14 App Router + TypeScript + Tailwind + Supabase platform for hackathon project submission, blind voting, AI judging, and event analytics.
 
-## What this includes
+## Features
 
-- Landing page with side-by-side project matchup (`Which project better?`)
-- Mock auth gate + login page
-- My page membership decision flow:
-  - no membership → create or join
-  - create project form
-  - join project form with join-code validation
-  - member view to edit project + see join code
-- Voting flow that records votes, advances matchup pairs, and loops until all done
-- Done page (`Thanks for voting!`)
-- Local mocked state persisted in `localStorage`
+### Voting System
+- **Side-by-side voting** — Random project pairs, choose one or skip
+- **Blind voting mode** — Hide team names for unbiased judging
+- **Vote protection** — Track voted pairs to avoid duplicate votes
+- **Leaderboard** — Real-time ranked project display with gold/silver/bronze styling
 
-## Route map
+### Project Submission
+- **Submit form** — Team name, project name, tagline, description, demo/GitHub links
+- **Project detail pages** — Individual pages with QR codes and share links
+- **Tag categories** — AI, Web, Mobile, etc.
 
-- `/` — Landing matchup preview + quick vote
-- `/login` — Mock login
-- `/my` — Membership decision + member project editor (auth-gated)
-- `/my/create` — Create project (auth-gated)
-- `/my/join` — Join by code (auth-gated)
-- `/vote` — Main voting flow (auth-gated)
-- `/done` — Completion page (auth-gated)
+### Admin / Organizer
+- **Dashboard** — Stats overview (projects, votes, hackers)
+- **Event Summary Generator** — AI-powered recap (winner, audience favorite, hidden gem)
 
-Existing utility routes still available:
+### AI Features
+- **Project pitch generator** — One-liner, audience, and judge-specific pitches
+- **AI Judge** — Shark Tank and technical persona critics
+- **Event summary** — Gemini 1.5 Flash via Vertex AI
 
-- `/api/health`
-- `/api/test-db`
-- `/submit` (legacy placeholder)
-- `/leaderboard` (legacy placeholder)
+### Tech & UX
+- **Dark mode** — Full dark mode with system preference detection
+- **Mobile responsive** — Works on all screen sizes
+- **SEO** — robots.txt, sitemap.xml, Open Graph tags
 
-## Run locally
+## Tech Stack
+
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Backend**: Supabase (Postgres, Auth)
+- **AI**: Google Vertex AI (gemini-1.5-flash)
+- **Deployment**: Vercel
+
+## Quick Start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000)
 
-## Vercel readiness
+## Environment Variables
 
-This app is App Router based and deploys directly to Vercel with no extra config.
+Create `.env.local` from `.env.local.example`:
 
-If you use `/api/test-db`, set:
-
-```bash
-SUPABASE_URL=your-supabase-url
-SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+VERTEX_AI_PROJECT_ID=your_gcp_project_id  # optional — for AI features
 ```
 
-## Quick Access QR Code
+## Supabase Setup
 
-Scan this QR code to quickly access the project page.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for full Supabase schema setup.
 
-![QR Code](https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com/hackathon-project)
+Required tables: `projects`, `votes`
 
-**Note:** The QR code currently links to `https://example.com/hackathon-project`. Please replace `https://example.com/hackathon-project` in the Markdown with the actual deployed URL of your project.
+## Deployment
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for:
+- Vercel deployment steps
+- Supabase project creation
+- Environment variable configuration
