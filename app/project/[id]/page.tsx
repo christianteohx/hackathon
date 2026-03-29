@@ -93,7 +93,7 @@ export default function ProjectPage() {
         </button>
       </div>
 
-      <ProjectQR projectId={id} projectName={project.project_name} />
+      <ProjectQR projectId={Array.isArray(id) ? id[0] : id ?? ''} projectName={project.project_name} />
     </main>
   );
 }

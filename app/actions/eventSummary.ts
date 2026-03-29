@@ -37,7 +37,8 @@ Respond JSON with exactly:
     const vertex = new VertexAI({ project: process.env.VERTEX_AI_PROJECT_ID!, location: 'us-central1' });
     const model = vertex.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const response = result.response;
+    const text = response.candidates?.[0]?.content?.parts?.find(p => 'text' in p)?.text ?? '';
     // Try to parse JSON from response
     const match = text.match(/\{[\s\S]*\}/);
     if (match) return JSON.parse(match[0]);
