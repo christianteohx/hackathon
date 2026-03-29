@@ -40,6 +40,7 @@ export default function LeaderboardPage() {
               <div style={{fontSize: '0.8rem', color: '#666'}}>{p.team}</div>
             </div>
             <div style={{fontWeight: 'bold', color: '#3b82f6'}}>{p.votes} votes</div>
+            <button onClick={() => navigator.clipboard.writeText(`/project/${p.rank}`)} style={{fontSize:'0.7rem',padding:'2px 6px',cursor:'pointer'}}>🔗</button>
           </div>
         ))}
       </div>
