@@ -98,6 +98,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
  const mappedProjects = (fetchedProjects || []).map((p) => ({
  ...p,
  summary: p.description,
+          owner: p.team_name || null,
  joinCode: p.join_code,
  elo_rating: p.elo_rating ?? 1200,
  }));
@@ -364,6 +365,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             updatedProjects.map((p) => ({
               ...p,
               summary: p.description,
+          owner: p.team_name || null,
               joinCode: p.join_code,
               elo_rating: p.elo_rating ?? 1200,
             }))
