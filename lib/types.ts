@@ -26,6 +26,7 @@ export type Project = {
   updated_at?: string; 
   elo_rating?: number; // Elo rating for voting system
   organizationId: string; // New: For multi-tenancy
+  tags?: string[]; // Project category tags
 }; 
 
 export type VotePair = { 

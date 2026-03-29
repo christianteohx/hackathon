@@ -35,6 +35,7 @@ export const MOCK_PROJECTS: Project[] = [
     github_url: "https://github.com/teamnorth/aurora-notes",
     organizationId: "org-north",
     created_by_user_id: "user-1",
+    tags: ["AI", "Productivity", "Web"],
   },
   {
     id: "proj-pulse",
@@ -48,6 +49,7 @@ export const MOCK_PROJECTS: Project[] = [
     github_url: "https://github.com/teameast/pulse-grid",
     organizationId: "org-east",
     created_by_user_id: "user-2",
+    tags: ["AI", "Mobile", "City Tech"],
   },
   {
     id: "proj-sprout",
@@ -61,6 +63,7 @@ export const MOCK_PROJECTS: Project[] = [
     github_url: "https://github.com/teangreen/sprout-lab",
     organizationId: "org-green",
     created_by_user_id: "user-3",
+    tags: ["Web", "Gamification", "Climate"],
   },
   {
     id: "proj-fjord",
@@ -74,6 +77,7 @@ export const MOCK_PROJECTS: Project[] = [
     github_url: "https://github.com/teamwest/fjord-finance",
     organizationId: "org-west",
     created_by_user_id: "user-4",
+    tags: ["AI", "Web", "FinTech"],
   },
   {
     id: "proj-nexus",
@@ -87,6 +91,7 @@ export const MOCK_PROJECTS: Project[] = [
     github_url: "https://github.com/phoenixteam/nexus-health",
     organizationId: "org-phoenix",
     created_by_user_id: "user-5",
+    tags: ["Web", "HealthTech", "AI"],
   },
   {
     id: "proj-echo",
@@ -100,6 +105,7 @@ export const MOCK_PROJECTS: Project[] = [
     github_url: "https://github.com/linguistteam/echo-learn",
     organizationId: "org-linguist",
     created_by_user_id: "user-6",
+    tags: ["Mobile", "AI", "EdTech"],
   },
   {
     id: "proj-vertex",
@@ -113,6 +119,7 @@ export const MOCK_PROJECTS: Project[] = [
     github_url: "https://github.com/vertexteam/vertex-ai",
     organizationId: "org-vertex",
     created_by_user_id: "user-7",
+    tags: ["AI", "No-Code", "Web"],
   },
   {
     id: "proj-haven",
@@ -126,6 +133,7 @@ export const MOCK_PROJECTS: Project[] = [
     github_url: "https://github.com/sentinelteam/haven-space",
     organizationId: "org-sentinel",
     created_by_user_id: "user-8",
+    tags: ["IoT", "Privacy", "Mobile"],
   }
 ];
 
