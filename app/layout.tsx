@@ -27,6 +27,7 @@ export default function RootLayout({
               <Link href="/submit">Submit</Link>
               <Link href="/vote">Vote</Link>
               <Link href="/leaderboard">Leaderboard</Link>
+              <Link href="/admin">Admin</Link>
             </div>
           </nav>
           {children}
