@@ -1,275 +1,64 @@
-"use client";
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useSearchParams } from 'next/navigation';
-import { supabase } from "@/lib/supabase";
+'use client';
 
-interface Hackathon {
-  id: string;
-}
+import { useState } from 'react';
 
-interface TeamVote {
-  id: string;
-  name: string;
-  eloRating: number;
-  voteCount: number;
-  rank: number;
-}
+// Mock data — replace with Supabase fetch later
+const mockProjects = [
+  { rank: 1, name: 'Project Alpha', team: 'Team A', votes: 42 },
+  { rank: 2, name: 'Quantum Leaper', team: 'Team B', votes: 38 },
+  { rank: 3, name: 'DataMind', team: 'Team C', votes: 31 },
+  { rank: 4, name: 'SwiftNav', team: 'Team D', votes: 27 },
+  { rank: 5, name: 'CloudBridge', team: 'Team E', votes: 22 },
+];
 
 export default function LeaderboardPage() {
-  const [leaderboardData, setLeaderboardData] = useState<TeamVote[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      setLoading(true);
-      try {
-        const searchParams = new URLSearchParams(window.location.search);
-        const hackathonSlug = searchParams.get('hackathon'); // Show all if no hackathon specified
-
-        let currentHackathonId: string | null = null;
-        if (hackathonSlug) {
-          const { data: hackathonData, error: hackathonError } = await supabase
-            .from('hackathons')
-            .select('id')
-            .eq('slug', hackathonSlug)
-            .single();
-
-          if (hackathonError || !hackathonData) {
-            console.error('Error fetching hackathon:', hackathonError);
-            setLeaderboardData([]);
-            setLoading(false);
-            return;
-          }
-          currentHackathonId = (hackathonData as Hackathon).id;
-        }
-
-        let projectsQuery = supabase.from("projects").select("id, name, elo_rating");
-        if (currentHackathonId) {
-          projectsQuery = projectsQuery.eq('hackathon_id', currentHackathonId);
-        }
-
-        const { data: projects, error: projectsError } = await projectsQuery;
-
-        if (projectsError) {
-          console.error("Error fetching projects:", projectsError);
-          setLeaderboardData([]);
-          setLoading(false);
-          return;
-        }
-
-        let votesQuery = supabase.from("votes").select("winner_project_id");
-        if (currentHackathonId) {
-          votesQuery = votesQuery.eq('hackathon_id', currentHackathonId);
-        }
-
-        const { data: votes, error: votesError } = await votesQuery;
-
-        if (votesError) {
-          console.error("Error fetching votes:", votesError);
-          setLeaderboardData([]);
-          setLoading(false);
-          return;
-        }
-
-        // Count votes per project
-        const voteCounts = new Map<string, number>();
-        votes?.forEach((vote) => {
-          const projectId = vote.winner_project_id;
-          voteCounts.set(projectId, (voteCounts.get(projectId) || 0) + 1);
-        });
-
-        // Build leaderboard data with Elo ratings and vote counts
-        const teamData = (projects || []).map((project) => ({
-          id: project.id,
-          name: project.name,
-          eloRating: project.elo_rating ?? 1200,
-          voteCount: voteCounts.get(project.id) || 0,
-          rank: 0,
-        }));
-
-        // Sort by Elo rating (descending) and assign ranks
-        teamData.sort((a, b) => b.eloRating - a.eloRating);
-        teamData.forEach((team, index) => {
-          team.rank = index + 1;
-        });
-
-        setLeaderboardData(teamData);
-      } catch (error) {
-        console.error("Error fetching leaderboard:", error);
-        setLeaderboardData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLeaderboard();
-  }, []);
-
-  const filteredData = leaderboardData.filter((team) =>
-    team.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleDownloadCSV = async () => {
-    try {
-      const response = await fetch("/api/leaderboard-export");
-      if (!response.ok) {
-        throw new Error("Failed to download CSV");
-      }
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "leaderboard.csv";
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Error downloading CSV:", error);
-      alert("Failed to download CSV. Please try again.");
-    }
-  };
-
-  const searchInputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "12px 16px",
-    fontSize: "16px",
-    border: "2px solid #e2e8f0",
-    borderRadius: "8px",
-    outline: "none",
-    transition: "border-color 0.2s",
-    marginBottom: "16px",
-  };
-
-  const noResultsStyle: React.CSSProperties = {
-    textAlign: "center",
-    padding: "24px",
-    color: "#64748b",
-    fontStyle: "italic",
-  };
-
-  const tableStyle: React.CSSProperties = {
-    width: "100%",
-    borderCollapse: "collapse",
-    marginTop: "16px",
-  };
-
-  const thStyle: React.CSSProperties = {
-    textAlign: "left",
-    padding: "12px 16px",
-    backgroundColor: "#f8fafc",
-    borderBottom: "2px solid #e2e8f0",
-    fontWeight: "600",
-    color: "#475569",
-  };
-
-  const tdStyle: React.CSSProperties = {
-    padding: "12px 16px",
-    borderBottom: "1px solid #e2e8f0",
-  };
-
-  const rankStyle: React.CSSProperties = {
-    fontWeight: "600",
-    color: "#3b82f6",
-  };
-
-  const eloStyle: React.CSSProperties = {
-    fontWeight: "600",
-    color: "#10b981",
-  };
-
-  const downloadButtonStyle: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "10px 16px",
-    backgroundColor: "#3b82f6",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    fontSize: "14px",
-    fontWeight: "500",
-    cursor: "pointer",
-    transition: "background-color 0.2s",
-    marginBottom: "16px",
-  };
-
-  if (loading) {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-8">
-        <h1 className="text-2xl font-semibold">Leaderboard</h1>
-        <p className="text-slate-600">Loading Elo ratings...</p>
-      </main>
-    );
-  }
+  const [projects] = useState(mockProjects);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 p-8">
-      <h1 className="text-2xl font-semibold">Leaderboard</h1>
-      <p className="text-slate-600">
-        Projects ranked by Elo rating. Higher rating = better performance!
+    <main style={{maxWidth: '640px', margin: '0 auto', padding: '2rem 1rem'}}>
+      <h1 style={{fontSize: '1.75rem', fontWeight: 'bold', marginBottom: '1.5rem'}}>
+        🏆 Leaderboard
+      </h1>
+      
+      <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
+        {projects.map((p) => (
+          <div key={p.rank} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            padding: '0.875rem 1rem',
+            borderRadius: '8px',
+            background: p.rank <= 3 ? (
+              p.rank === 1 ? '#fef9c3' : 
+              p.rank === 2 ? '#f1f5f9' : 
+              '#fed7aa'
+            ) : 'var(--card-bg, #f9f9f9)',
+            border: '1px solid var(--border, #e5e5e5)',
+          }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 'bold',
+              background: p.rank === 1 ? '#eab308' : p.rank === 2 ? '#94a3b8' : p.rank === 3 ? '#c2410c' : '#e5e5e5',
+              color: p.rank <= 3 ? 'white' : '#666',
+              fontSize: '0.875rem',
+            }}>
+              {p.rank}
+            </div>
+            <div style={{flex: 1}}>
+              <div style={{fontWeight: '600'}}>{p.name}</div>
+              <div style={{fontSize: '0.8rem', color: '#666'}}>{p.team}</div>
+            </div>
+            <div style={{fontWeight: 'bold', color: 'var(--accent, #3b82f6)'}}>
+              {p.votes} votes
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <p style={{marginTop: '1.5rem', fontSize: '0.875rem', color: '#666', textAlign: 'center'}}>
+        Leaderboard updates as votes come in.
       </p>
-      <button
-        onClick={handleDownloadCSV}
-        style={downloadButtonStyle}
-        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#2563eb")}
-        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#3b82f6")}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="7 10 12 15 17 10" />
-          <line x1="12" y1="15" x2="12" y2="3" />
-        </svg>
-        Download CSV
-      </button>
-      <input
-        type="text"
-        placeholder="Search teams..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={searchInputStyle}
-        onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-        onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
-      />
-      {searchTerm && filteredData.length === 0 ? (
-        <div style={noResultsStyle}>
-          No teams found matching "{searchTerm}"
-        </div>
-      ) : (
-        <table style={tableStyle}>
-          <thead>
-            <tr>
-              <th style={thStyle}>Rank</th>
-              <th style={thStyle}>Team</th>
-              <th style={thStyle}>Elo Rating</th>
-              <th style={thStyle}>Votes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((team) => (
-              <tr key={team.id}>
-                <td style={{ ...tdStyle, ...rankStyle }}>{team.rank}</td>
-                <td style={tdStyle}>{team.name}</td>
-                <td style={{ ...tdStyle, ...eloStyle }}>{team.eloRating}</td>
-                <td style={tdStyle}>{team.voteCount}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <Link href="/">Back home</Link>
     </main>
   );
 }
