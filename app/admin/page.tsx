@@ -57,80 +57,58 @@ export default function AdminPage() {
   }, []);
 
   const statCards = [
-    { label: 'Total Projects', value: stats.totalProjects, emoji: '📁' },
-    { label: 'Total Votes Cast', value: stats.totalVotes, emoji: '🗳️' },
-    { label: 'Active Hackers', value: stats.activeHackers, emoji: '👥' },
+    { label: 'Total Projects', value: stats.totalProjects, icon: '📁' },
+    { label: 'Total Votes Cast', value: stats.totalVotes, icon: '🗳️' },
+    { label: 'Active Hackers', value: stats.activeHackers, icon: '👥' },
   ];
 
   return (
     <AppShell title="🏁 Organizer Dashboard" subtitle="Overview of the current hackathon event">
       {loading && (
-        <p style={{ color: '#666', textAlign: 'center', padding: '2rem' }}>Loading stats...</p>
+        <p className="text-center text-gray-500 py-12">Loading stats...</p>
       )}
 
       {error && (
-        <div style={{
-          background: '#fef3c7',
-          border: '1px solid #f59e0b',
-          borderRadius: '8px',
-          padding: '0.75rem 1rem',
-          color: '#92400e',
-          marginBottom: '1.5rem',
-          fontSize: '0.875rem',
-        }}>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 text-sm mb-6">
           ⚠️ {error}
         </div>
       )}
 
       {/* Stats Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '1rem',
-        marginBottom: '2rem',
-      }}>
-        {statCards.map(({ label, value, emoji }) => (
-          <div key={label} style={{
-            background: '#f9f9f9',
-            border: '1px solid #e5e5e5',
-            borderRadius: '8px',
-            padding: '1.25rem',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{emoji}</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{loading ? '—' : value}</div>
-            <div style={{ fontSize: '0.875rem', color: '#666' }}>{label}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+        {statCards.map(({ label, value, icon }) => (
+          <div key={label} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm text-center">
+            <div className="text-3xl mb-3">{icon}</div>
+            <div className="text-4xl font-bold text-gray-900 leading-none">
+              {loading ? '—' : value.toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-500 mt-2">{label}</div>
           </div>
         ))}
       </div>
 
       {/* Top Projects */}
       {!loading && topProjects.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.75rem' }}>🏆 Top Projects</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="mb-10">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">🏆 Top Projects</h2>
+          <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
             {topProjects.map((project, idx) => (
-              <div key={idx} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.625rem 1rem',
-                background: idx === 0 ? '#fef9c3' : idx === 1 ? '#f1f5f9' : idx === 2 ? '#fed7aa' : '#f9f9f9',
-                borderRadius: '6px',
-                border: '1px solid #e5e5e5',
-              }}>
-                <span style={{ fontWeight: 'bold', width: '24px', textAlign: 'center' }}>
+              <div
+                key={idx}
+                className={`flex items-center gap-4 px-5 py-4 border-b border-gray-100 last:border-0 ${
+                  idx === 0 ? 'bg-yellow-50' : idx === 1 ? 'bg-slate-50' : idx === 2 ? 'bg-orange-50' : 'bg-white'
+                }`}
+              >
+                <span className="w-8 text-center text-base">
                   {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`}
                 </span>
-                <span style={{ flex: 1, fontWeight: '500' }}>{project.name}</span>
+                <span className="flex-1 font-semibold text-gray-900 text-sm">{project.name}</span>
                 {project.team_name && (
-                  <span style={{ fontSize: '0.75rem', background: '#ede9fe', color: '#6b21a8', padding: '2px 6px', borderRadius: '4px' }}>
+                  <span className="hidden sm:inline-flex text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
                     {project.team_name}
                   </span>
                 )}
-                <span style={{ fontWeight: 'bold', color: '#3b82f6', fontSize: '0.875rem' }}>
-                  {Math.round(project.elo_rating)} Elo
-                </span>
+                <span className="font-bold text-blue-500 text-sm">{Math.round(project.elo_rating)} Elo</span>
               </div>
             ))}
           </div>
@@ -138,25 +116,28 @@ export default function AdminPage() {
       )}
 
       {/* Quick Actions */}
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-        <a
-          href="/leaderboard"
-          style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer', textDecoration: 'none', color: '#333', fontSize: '0.875rem' }}
-        >
-          📊 View Leaderboard
-        </a>
-        <a
-          href="/vote"
-          style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer', textDecoration: 'none', color: '#333', fontSize: '0.875rem' }}
-        >
-          🗳️ Start Voting
-        </a>
-        <a
-          href="/submit"
-          style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #e5e5e5', background: '#fff', cursor: 'pointer', textDecoration: 'none', color: '#333', fontSize: '0.875rem' }}
-        >
-          ➕ Add Project
-        </a>
+      <div>
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="flex gap-3 flex-wrap">
+          <a
+            href="/leaderboard"
+            className="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
+          >
+            📊 View Leaderboard
+          </a>
+          <a
+            href="/vote"
+            className="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
+          >
+            🗳️ Start Voting
+          </a>
+          <a
+            href="/submit"
+            className="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
+          >
+            ➕ Add Project
+          </a>
+        </div>
       </div>
     </AppShell>
   );

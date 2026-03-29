@@ -23,11 +23,6 @@ function markPairVoted(leftId: string, rightId: string) {
   }
 }
 
-function hasVotedPair(leftId: string, rightId: string): boolean {
-  const key = [leftId, rightId].sort().join("|");
-  return getVotedPairs().includes(key);
-}
-
 export default function VotePage() {
   const {
     currentPair,
@@ -67,7 +62,7 @@ export default function VotePage() {
   if (!leftProject || !rightProject) {
     return (
       <AppShell title="Vote" subtitle="Project pair unavailable.">
-        <p className="text-sm text-rose-700">
+        <p className="text-sm text-red-600">
           Unable to load the current vote pair.
         </p>
       </AppShell>
@@ -81,7 +76,6 @@ export default function VotePage() {
     if (!requireAuth("cast a vote")) {
       return;
     }
-    // Mark this pair as voted using localStorage
     markPairVoted(pair.leftProjectId, pair.rightProjectId);
     setVoteCount(getVotedPairs().length);
     castVote(winnerId);
@@ -93,29 +87,26 @@ export default function VotePage() {
   }
 
   return (
-    <AppShell title="Voting Flow" subtitle="Record votes and continue until all project matchups are done.">
+    <AppShell title="🗳️ Voting" subtitle="Pick the better project in each matchup. All votes are anonymous.">
       {/* Blind Mode Toggle */}
-      <div className="mb-8 rounded-xl bg-gradient-to-br from-white to-blue-50 p-6 shadow-md border border-blue-100">
-        <div className="flex items-center justify-between">
+      <div className="mb-8 rounded-xl border border-gray-200 bg-gray-50 p-6">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3 className="text-sm font-semibold text-gray-900">
               Blind Voting Mode
             </h3>
-            <p className="mt-1 text-xs text-slate-600">
-              Hide project and team names while voting to reduce bias. Names
-              will still be visible after you cast your vote.
+            <p className="mt-1 text-xs text-gray-500">
+              Hide project and team names while voting to reduce bias. Names are revealed after you cast your vote.
             </p>
           </div>
           <button
             type="button"
             onClick={toggleBlindMode}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 ${
-              isBlindMode ? "bg-slate-900" : "bg-slate-300"
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              isBlindMode ? "bg-blue-500" : "bg-gray-300"
             }`}
             aria-pressed={isBlindMode}
-            aria-label={
-              isBlindMode ? "Disable blind voting mode" : "Enable blind voting mode"
-            }
+            aria-label={isBlindMode ? "Disable blind voting mode" : "Enable blind voting mode"}
           >
             <span className="sr-only">Toggle blind voting mode</span>
             <span
@@ -129,16 +120,14 @@ export default function VotePage() {
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
               isBlindMode
-                ? "bg-slate-900 text-white"
-                : "bg-slate-200 text-slate-700"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700"
             }`}
           >
             {isBlindMode ? "✓ Blind mode ON" : "Blind mode OFF"}
           </span>
           {isBlindMode && (
-            <span className="text-xs text-slate-500">
-              Project names hidden during voting
-            </span>
+            <span className="text-xs text-gray-400">Project names hidden during voting</span>
           )}
         </div>
       </div>
@@ -151,12 +140,12 @@ export default function VotePage() {
         isBlindMode={isBlindMode}
       />
 
-      <p style={{ fontSize: "0.875rem", color: "#666" }}>
-        You've voted on {voteCount} matchups tonight.
+      <p className="mt-6 text-sm text-gray-500">
+        You've voted on <span className="font-semibold text-gray-700">{voteCount}</span> matchups.
       </p>
 
-      <div>
-        <Link href="/my" className="text-sm">
+      <div className="mt-2">
+        <Link href="/my" className="text-sm text-blue-500 hover:text-blue-600">
           Need to update your project first?
         </Link>
       </div>

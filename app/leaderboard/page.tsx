@@ -43,10 +43,10 @@ export default function LeaderboardPage() {
   }, []);
 
   const getRankStyle = (rank: number) => {
-    if (rank === 1) return { bg: '#fef9c3', border: '#eab308', medal: '#eab308' };
-    if (rank === 2) return { bg: '#f1f5f9', border: '#94a3b8', medal: '#94a3b8' };
-    if (rank === 3) return { bg: '#fed7aa', border: '#c2410c', medal: '#c2410c' };
-    return { bg: '#f9f9f9', border: '#e5e5e5', medal: '#e5e5e5' };
+    if (rank === 1) return { bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-700', pill: 'bg-yellow-100 text-yellow-800' };
+    if (rank === 2) return { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-600', pill: 'bg-slate-100 text-slate-700' };
+    if (rank === 3) return { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', pill: 'bg-orange-100 text-orange-800' };
+    return { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-700', pill: 'bg-gray-100 text-gray-600' };
   };
 
   const getMedalEmoji = (rank: number) => {
@@ -59,110 +59,86 @@ export default function LeaderboardPage() {
   return (
     <AppShell title="🏆 Leaderboard" subtitle="Ranked by Elo rating — updated after every vote">
       {loading && (
-        <p style={{ color: '#666', textAlign: 'center', padding: '2rem' }}>
-          Loading leaderboard...
-        </p>
+        <p className="text-center text-gray-500 py-12">Loading leaderboard...</p>
       )}
 
       {error && (
-        <div style={{
-          background: '#fee2e2',
-          border: '1px solid #ef4444',
-          borderRadius: '8px',
-          padding: '1rem',
-          color: '#dc2626',
-          marginBottom: '1rem',
-        }}>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm mb-6">
           {error}
         </div>
       )}
 
       {!loading && !error && projects.length === 0 && (
-        <div style={{
-          background: '#f9f9f9',
-          border: '1px solid #e5e5e5',
-          borderRadius: '8px',
-          padding: '3rem',
-          textAlign: 'center',
-          color: '#666',
-        }}>
-          <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>No projects yet</p>
-          <p style={{ fontSize: '0.875rem' }}>
-            <a href="/submit" style={{ color: '#3b82f6' }}>Submit the first project</a> to get voting started!
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-12 text-center">
+          <p className="text-xl font-semibold text-gray-700 mb-2">No projects yet</p>
+          <p className="text-gray-500">
+            <a href="/submit" className="text-blue-500 hover:text-blue-600">Submit the first project</a> to get voting started!
           </p>
         </div>
       )}
 
       {!loading && !error && projects.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+          {/* Header row */}
+          <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <div className="col-span-1">Rank</div>
+            <div className="col-span-7 md:col-span-6">Project</div>
+            <div className="col-span-2 text-center hidden md:block">Rating</div>
+            <div className="col-span-3 md:col-span-4 text-right">Links</div>
+          </div>
+
           {projects.map((project, idx) => {
             const rank = idx + 1;
             const style = getRankStyle(rank);
             const medal = getMedalEmoji(rank);
 
             return (
-              <div key={project.id} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                padding: '0.875rem 1rem',
-                borderRadius: '8px',
-                background: style.bg,
-                border: `1px solid ${style.border}`,
-                transition: 'transform 0.1s',
-              }}>
+              <div
+                key={project.id}
+                className={`grid grid-cols-12 gap-4 px-6 py-4 items-center border-b border-gray-100 last:border-0 transition-colors hover:bg-gray-50 ${style.bg}`}
+              >
                 {/* Rank */}
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  flexShrink: 0,
-                  background: medal ? style.medal : '#e5e5e5',
-                  color: medal ? 'white' : '#666',
-                  fontSize: medal ? '1.1rem' : '0.875rem',
-                }}>
-                  {medal || rank}
+                <div className="col-span-1">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm ${medal ? style.text : 'text-gray-500 bg-gray-200'}`}>
+                    {medal ? <span className="text-base">{medal}</span> : rank}
+                  </div>
                 </div>
 
                 {/* Project Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: '600', marginBottom: '2px' }}>
-                    {project.name}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: '#666', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div className="col-span-8 md:col-span-6 min-w-0">
+                  <div className="font-semibold text-gray-900 text-base">{project.name}</div>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     {project.team_name && (
-                      <span style={{ background: '#ede9fe', color: '#6b21a8', padding: '1px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.pill}`}>
                         {project.team_name}
                       </span>
                     )}
                     {project.tagline && (
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {project.tagline}
-                      </span>
+                      <span className="text-xs text-gray-500 truncate">{project.tagline}</span>
                     )}
                   </div>
                 </div>
 
                 {/* Elo Rating */}
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#3b82f6' }}>
-                    {Math.round(project.elo_rating)}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#888' }}>Elo</div>
+                <div className="hidden md:flex col-span-2 flex-col items-center justify-center">
+                  <span className="text-2xl font-bold text-blue-500 leading-none">{Math.round(project.elo_rating)}</span>
+                  <span className="text-xs text-gray-400 mt-0.5">Elo</span>
+                </div>
+
+                {/* Mobile elo */}
+                <div className="md:hidden col-span-3 flex flex-col items-end">
+                  <span className="text-lg font-bold text-blue-500">{Math.round(project.elo_rating)}</span>
+                  <span className="text-xs text-gray-400">Elo</span>
                 </div>
 
                 {/* Links */}
-                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                <div className="col-span-3 md:col-span-4 flex gap-2 justify-end">
                   {project.demo_url && (
                     <a
                       href={project.demo_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', background: '#3b82f6', color: 'white', textDecoration: 'none' }}
+                      className="px-3 py-1.5 rounded-md bg-blue-500 text-white text-xs font-medium hover:bg-blue-600 transition-colors"
                     >
                       Demo
                     </a>
@@ -172,7 +148,7 @@ export default function LeaderboardPage() {
                       href={project.github_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', background: '#333', color: 'white', textDecoration: 'none' }}
+                      className="px-3 py-1.5 rounded-md bg-gray-800 text-white text-xs font-medium hover:bg-gray-900 transition-colors"
                     >
                       GitHub
                     </a>
@@ -185,7 +161,7 @@ export default function LeaderboardPage() {
       )}
 
       {!loading && !error && projects.length > 0 && (
-        <p style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: '#666', textAlign: 'center' }}>
+        <p className="mt-6 text-sm text-gray-500 text-center">
           {projects.length} project{projects.length !== 1 ? 's' : ''} · Leaderboard updates after every vote
         </p>
       )}

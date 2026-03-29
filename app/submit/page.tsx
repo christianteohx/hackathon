@@ -51,7 +51,6 @@ export default function SubmitPage() {
       return;
     }
 
-    // Fetch active hackathon
     const { data: hackathon } = await supabase
       .from("hackathons")
       .select("id")
@@ -95,24 +94,22 @@ export default function SubmitPage() {
   if (submitted) {
     return (
       <AppShell title="🎉 Project Submitted!" subtitle="Your project is now on the leaderboard">
-        <div style={{ textAlign: "center", padding: "2rem" }}>
-          <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🎉</div>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
-            You're on the leaderboard!
-          </h2>
-          <p style={{ color: "#666", marginBottom: "1.5rem" }}>
+        <div className="text-center py-12">
+          <div className="text-6xl mb-6">🎉</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">You're on the leaderboard!</h2>
+          <p className="text-gray-500 mb-8 max-w-md mx-auto">
             Share your project's join code with teammates so they can edit it.
           </p>
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="flex gap-3 justify-center flex-wrap">
             <a
               href="/vote"
-              style={{ padding: "10px 20px", borderRadius: "8px", background: "#3b82f6", color: "white", textDecoration: "none", fontWeight: "600" }}
+              className="px-6 py-3 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-colors"
             >
               🗳️ Go vote for other projects
             </a>
             <a
               href="/"
-              style={{ padding: "10px 20px", borderRadius: "8px", background: "#f1f5f9", color: "#333", textDecoration: "none", fontWeight: "600" }}
+              className="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
             >
               ← Back home
             </a>
@@ -128,36 +125,21 @@ export default function SubmitPage() {
       subtitle="Fill in the details below to add your project to the leaderboard"
     >
       {error && (
-        <div style={{
-          background: "#fee2e2",
-          border: "1px solid #ef4444",
-          borderRadius: "8px",
-          padding: "0.75rem 1rem",
-          color: "#dc2626",
-          marginBottom: "1rem",
-          fontSize: "0.875rem",
-        }}>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm mb-6">
           ⚠️ {error}
         </div>
       )}
 
       {!session && (
-        <div style={{
-          background: "#fef3c7",
-          border: "1px solid #f59e0b",
-          borderRadius: "8px",
-          padding: "0.75rem 1rem",
-          color: "#92400e",
-          marginBottom: "1rem",
-          fontSize: "0.875rem",
-        }}>
-          ⚠️ You should <a href="/login" style={{ color: "#3b82f6", textDecoration: "underline" }}>log in</a> before submitting.
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 text-sm mb-6">
+          ⚠️ You should <a href="/login" className="text-blue-500 hover:text-blue-600">log in</a> before submitting.
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: "640px" }}>
+      <form onSubmit={handleSubmit} className="max-w-xl flex flex-col gap-6">
+        {/* Team Name */}
         <div>
-          <label htmlFor="teamName" style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "4px", color: "#374151" }}>
+          <label htmlFor="teamName" className="block text-sm font-medium text-gray-700 mb-1.5">
             Team Name
           </label>
           <input
@@ -166,13 +148,14 @@ export default function SubmitPage() {
             placeholder="The Innovators"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
           />
         </div>
 
+        {/* Project Name */}
         <div>
-          <label htmlFor="projectName" style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "4px", color: "#374151" }}>
-            Project Name <span style={{ color: "#ef4444" }}>*</span>
+          <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 mb-1.5">
+            Project Name <span className="text-red-500">*</span>
           </label>
           <input
             id="projectName"
@@ -181,13 +164,14 @@ export default function SubmitPage() {
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
             required
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
           />
         </div>
 
+        {/* Tagline */}
         <div>
-          <label htmlFor="tagline" style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "4px", color: "#374151" }}>
-            Tagline <span style={{ color: "#ef4444" }}>*</span>
+          <label htmlFor="tagline" className="block text-sm font-medium text-gray-700 mb-1.5">
+            Tagline <span className="text-red-500">*</span>
           </label>
           <input
             id="tagline"
@@ -197,35 +181,33 @@ export default function SubmitPage() {
             onChange={(e) => setTagline(e.target.value)}
             required
             maxLength={100}
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
           />
-          <div style={{ fontSize: "0.75rem", color: "#9ca3af", textAlign: "right" }}>
-            {tagline.length}/100
-          </div>
+          <div className="text-xs text-gray-400 text-right mt-1">{tagline.length}/100</div>
         </div>
 
+        {/* Description */}
         <div>
-          <label htmlFor="description" style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "4px", color: "#374151" }}>
-            Description <span style={{ color: "#ef4444" }}>*</span>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1.5">
+            Description <span className="text-red-500">*</span>
           </label>
           <textarea
             id="description"
             rows={4}
-            placeholder="Describe your project in detail. What does it do? What tech stack? What problem does it solve?"
+            placeholder="Describe your project. What does it do? What tech stack? What problem does it solve?"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
             maxLength={500}
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow resize-none"
           />
-          <div style={{ fontSize: "0.75rem", color: "#9ca3af", textAlign: "right" }}>
-            {description.length}/500
-          </div>
+          <div className="text-xs text-gray-400 text-right mt-1">{description.length}/500</div>
         </div>
 
+        {/* Demo URL */}
         <div>
-          <label htmlFor="demoUrl" style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "4px", color: "#374151" }}>
-            Demo URL <span style={{ color: "#9ca3af", fontWeight: "400" }}>(optional)</span>
+          <label htmlFor="demoUrl" className="block text-sm font-medium text-gray-700 mb-1.5">
+            Demo URL <span className="text-gray-400 font-normal">(optional)</span>
           </label>
           <input
             id="demoUrl"
@@ -233,13 +215,14 @@ export default function SubmitPage() {
             placeholder="https://your-demo.com"
             value={demoUrl}
             onChange={(e) => setDemoUrl(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
           />
         </div>
 
+        {/* GitHub URL */}
         <div>
-          <label htmlFor="githubUrl" style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "4px", color: "#374151" }}>
-            GitHub URL <span style={{ color: "#9ca3af", fontWeight: "400" }}>(optional)</span>
+          <label htmlFor="githubUrl" className="block text-sm font-medium text-gray-700 mb-1.5">
+            GitHub URL <span className="text-gray-400 font-normal">(optional)</span>
           </label>
           <input
             id="githubUrl"
@@ -247,30 +230,20 @@ export default function SubmitPage() {
             placeholder="https://github.com/your/project"
             value={githubUrl}
             onChange={(e) => setGithubUrl(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-700"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
           />
         </div>
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={submitting}
-          style={{
-            marginTop: "0.5rem",
-            borderRadius: "8px",
-            background: submitting ? "#9ca3af" : "#7c3aed",
-            color: "white",
-            padding: "10px 24px",
-            fontWeight: "600",
-            fontSize: "0.875rem",
-            border: "none",
-            cursor: submitting ? "not-allowed" : "pointer",
-            transition: "background 0.2s",
-          }}
+          className="mt-2 w-full rounded-lg bg-blue-500 text-white px-6 py-3 font-semibold text-sm hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? "Submitting..." : "🚀 Submit Project"}
         </button>
 
-        <Link href="/" style={{ fontSize: "0.875rem", color: "#6b7280", textDecoration: "underline" }}>
+        <Link href="/" className="text-sm text-gray-500 hover:text-blue-500 text-center">
           ← Back home
         </Link>
       </form>
