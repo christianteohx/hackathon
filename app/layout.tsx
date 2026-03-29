@@ -8,8 +8,14 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] }); // Initialize Inter font
 
 export const metadata: Metadata = {
-  title: "Hackathon Project Voting",
-  description: "Mocked hackathon voting and project membership flow"
+  title: "Hackathon Voting Platform",
+  description:
+    "Submit your hackathon project, vote on others, and crown a winner. Features blind voting, AI judging, and live leaderboards.",
+  openGraph: {
+    title: "Hackathon Voting Platform",
+    description: "Vote. Win. Repeat.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
