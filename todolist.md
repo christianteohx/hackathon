@@ -22,13 +22,13 @@ Goal: Deploy a working platform where teams can submit projects, users vote betw
 
 ## Navigation / Layout
 
-- [ ] App shell layout
-- [ ] Navigation bar
-- [ ] Links:
-  - [ ] Home
-  - [ ] Submit
-  - [ ] Vote
-  - [ ] Leaderboard
+- [x] App shell layout
+- [x] Navigation bar (with active state highlighting)
+- [x] Links:
+  - [x] Home
+  - [x] Submit
+  - [x] Vote
+  - [x] Leaderboard
 
 ---
 
@@ -36,17 +36,17 @@ Goal: Deploy a working platform where teams can submit projects, users vote betw
 
 Page: `/submit`
 
-- [ ] Submission form UI
-- [ ] Form fields:
-  - [ ] team name
+- [x] Submission form UI
+- [x] Form fields:
+  - [x] team name
   - [x] project name
   - [x] tagline
   - [x] description
-  - [ ] demo URL (optional)
-  - [ ] github URL (optional)
-- [ ] Form validation
-- [ ] Save project to Supabase
-- [ ] Redirect to project page after submission
+  - [x] demo URL (optional)
+  - [x] github URL (optional)
+- [x] Form validation
+- [x] Save project to Supabase (with join_code, elo_rating, hackathon_id)
+- [x] Redirect to project page after submission
 
 ---
 
@@ -56,14 +56,14 @@ Page: `/submit`
 
 Fields
 
-- [ ] id
-- [ ] team_name
-- [ ] project_name
+- [x] id (auto)
+- [x] team_name
+- [x] project_name
 - [x] tagline
 - [x] description
-- [ ] demo_url
-- [ ] github_url
-- [ ] created_at
+- [x] demo_url
+- [x] github_url
+- [x] created_at
 
 ### Table: `votes`
 
@@ -82,15 +82,15 @@ Fields
 
 Page: `/vote`
 
-- [ ] Fetch two random projects
-- [ ] Display project cards
-- [ ] Show:
+- [x] Fetch two random projects
+- [x] Display project cards
+- [x] Show:
   - [x] project name
   - [x] tagline
   - [ ] short description
-- [ ] Vote buttons
-- [ ] Store vote result
-- [ ] Load next pair after vote
+- [x] Vote buttons
+- [x] Store vote result
+- [x] Load next pair after vote
 
 ---
 
@@ -98,17 +98,17 @@ Page: `/vote`
 
 Page: `/leaderboard`
 
-- [ ] Fetch projects
-- [ ] Aggregate vote counts
-- [ ] Rank projects
-- [ ] Display ranking table
+- [x] Fetch projects from Supabase
+- [x] Aggregate vote counts
+- [x] Rank projects by elo_rating
+- [x] Display ranking table
 
 Columns:
 
-- [ ] Rank
-- [ ] Project Name
-- [ ] Team
-- [ ] Vote Score
+- [x] Rank
+- [x] Project Name
+- [x] Team
+- [x] Vote Score (Elo rating)
 
 ---
 
@@ -130,10 +130,10 @@ Route: `/project/[id]`
 
 Page: `/admin`
 
-- [ ] Total projects
-- [ ] Total votes
-- [ ] Current leaderboard
-- [ ] Top projects
+- [x] Total projects (from Supabase)
+- [x] Total votes (from Supabase)
+- [x] Active hackers count (from Supabase profiles)
+- [x] Top 5 projects by Elo
 
 ---
 
