@@ -1,11 +1,32 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { VoteDuel } from "@/components/VoteDuel";
 import { useAppState } from "@/lib/app-state";
+
+// localStorage-based vote protection
+function getVotedPairs(): string[] {
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem("votedPairs");
+  return stored ? JSON.parse(stored) : [];
+}
+
+function markPairVoted(leftId: string, rightId: string) {
+  const key = [leftId, rightId].sort().join("|");
+  const pairs = getVotedPairs();
+  if (!pairs.includes(key)) {
+    pairs.push(key);
+    localStorage.setItem("votedPairs", JSON.stringify(pairs));
+  }
+}
+
+function hasVotedPair(leftId: string, rightId: string): boolean {
+  const key = [leftId, rightId].sort().join("|");
+  return getVotedPairs().includes(key);
+}
 
 export default function VotePage() {
   const {
@@ -20,6 +41,11 @@ export default function VotePage() {
   } = useAppState();
 
   const router = useRouter();
+  const [voteCount, setVoteCount] = useState(0);
+
+  useEffect(() => {
+    setVoteCount(getVotedPairs().length);
+  }, []);
 
   useEffect(() => {
     if (!currentPair) {
@@ -54,6 +80,9 @@ export default function VotePage() {
     if (!requireAuth("cast a vote")) {
       return;
     }
+    // Mark this pair as voted using localStorage
+    markPairVoted(currentPair.leftProjectId, currentPair.rightProjectId);
+    setVoteCount(getVotedPairs().length);
     castVote(winnerId);
     if (voteHistory.length + 1 >= votePairs.length) {
       router.push("/done");
@@ -120,6 +149,10 @@ export default function VotePage() {
         progress={progress}
         isBlindMode={isBlindMode}
       />
+
+      <p style={{ fontSize: "0.875rem", color: "#666" }}>
+        You've voted on {voteCount} matchups tonight.
+      </p>
 
       <div>
         <Link href="/my" className="text-sm">
