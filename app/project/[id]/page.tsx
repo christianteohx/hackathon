@@ -2,10 +2,20 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
+import ProjectQR from '@/components/ProjectQR';
 
 export default function ProjectPage() {
   const params = useParams();
   const id = params?.id;
+
+  function shareProject(name: string, url: string) {
+    if (navigator.share) {
+      navigator.share({ title: name, url });
+    } else {
+      navigator.clipboard.writeText(url);
+      alert('Link copied to clipboard!');
+    }
+  }
   
   // Mock data — replace with Supabase fetch later
   const [project] = useState({
@@ -64,6 +74,15 @@ export default function ProjectPage() {
           </a>
         )}
         <button
+          onClick={() => shareProject(project.project_name, window.location.href)}
+          style={{
+            padding: '8px 16px', borderRadius: '6px',
+            border: '1px solid #e5e5e5', background: '#fff',
+            cursor: 'pointer', fontSize: '0.9rem'
+          }}>
+          🔗 Share
+        </button>
+        <button
           onClick={() => window.history.back()}
           style={{
             padding: '8px 16px', borderRadius: '6px',
@@ -73,6 +92,8 @@ export default function ProjectPage() {
           ← Back
         </button>
       </div>
+
+      <ProjectQR projectId={id} projectName={project.project_name} />
     </main>
   );
 }
