@@ -7,10 +7,9 @@
 }
 
 body {
-  @apply bg-slate-100 text-slate-900 antialiased;
-  background-image: radial-gradient(circle at top, rgba(148, 163, 184, 0.16), transparent 45%);
+  @apply bg-white text-slate-900 antialiased;
 }
 
 a {
-  @apply text-blue-700 underline-offset-2 transition-colors hover:text-blue-800 hover:underline;
+  @apply text-blue-500 underline-offset-2 transition-colors hover:text-blue-600 hover:no-underline;
 }
