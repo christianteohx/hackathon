@@ -181,10 +181,10 @@ Output:
 
 Generate:
 
-- [ ] winner
-- [ ] audience favorite
-- [ ] hidden gem
-- [ ] recap paragraph
+- [x] winner
+- [x] audience favorite
+- [x] hidden gem
+- [x] recap paragraph
 
 ---
 
