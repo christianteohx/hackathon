@@ -18,6 +18,26 @@ export default function SubmitPage() {
     e.preventDefault();
     setSubmitting(true);
 
+    // Validate project name
+    const trimmedProjectName = projectName.trim();
+    if (trimmedProjectName.length < 3) {
+      alert("Project name must be at least 3 characters");
+      setSubmitting(false);
+      return;
+    }
+    if (trimmedProjectName.length > 50) {
+      alert("Project name must be under 50 characters");
+      setSubmitting(false);
+      return;
+    }
+
+    // Validate description
+    if (description.length < 20) {
+      alert("Please write a description of at least 20 characters");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("projects")
@@ -47,14 +67,11 @@ export default function SubmitPage() {
 
   if (submitted) {
     return (
-      <main className="mx-auto max-w-2xl p-8">
-        <h1 className="text-2xl font-semibold mb-6">Project Submitted!</h1>
-        <p className="text-slate-600 mb-6">
-          Your project has been submitted successfully. Head back home to see it on the leaderboard.
-        </p>
-        <Link href="/" className="text-sm text-slate-600 hover:underline">
-          ← Back home
-        </Link>
+      <main style={{ maxWidth: "640px", margin: "0 auto", padding: "2rem 1rem", textAlign: "center" }}>
+        <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🎉</div>
+        <h1 style={{ fontSize: "1.75rem", fontWeight: "bold", marginBottom: "0.5rem" }}>Project Submitted!</h1>
+        <p style={{ color: "#666", marginBottom: "1.5rem" }}>Your project is now on the leaderboard.</p>
+        <a href="/vote" style={{ color: "#3b82f6", textDecoration: "underline" }}>Go vote for other projects →</a>
       </main>
     );
   }
@@ -104,6 +121,9 @@ export default function SubmitPage() {
             required
             className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold"
           />
+          <div style={{ fontSize: "0.75rem", color: "#999", textAlign: "right" }}>
+            {tagline.length}/100
+          </div>
         </div>
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-slate-700 mb-1">
@@ -118,6 +138,9 @@ export default function SubmitPage() {
             required
             className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold"
           />
+          <div style={{ fontSize: "0.75rem", color: "#999", textAlign: "right" }}>
+            {description.length}/500
+          </div>
         </div>
         <div>
           <label htmlFor="demoUrl" className="block text-sm font-medium text-slate-700 mb-1">
