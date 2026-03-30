@@ -2,14 +2,195 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
 :root {
   color-scheme: light;
+  
+  /* Electric Minimalism palette */
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0 0);
+  --primary: oklch(0.55 0.18 245);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.01 250);
+  --secondary-foreground: oklch(0.35 0.02 250);
+  --muted: oklch(0.94 0.01 250);
+  --muted-foreground: oklch(0.50 0.02 250);
+  --border: oklch(0.90 0.01 250);
+  --input-border: oklch(0.88 0.01 250);
+  --accent: oklch(0.55 0.18 245);
+  --success: oklch(0.65 0.19 145);
+  --warning: oklch(0.75 0.15 85);
+  --error: oklch(0.60 0.20 25);
+  --radius: 0.625rem;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased;
+  font-family: var(--font-body);
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  @apply text-blue-500 underline-offset-2 transition-colors hover:text-blue-600 hover:no-underline;
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-foreground);
+}
+
+/* Selection */
+::selection {
+  background-color: oklch(0.55 0.18 245 / 0.2);
+  color: var(--foreground);
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 200ms ease-out, opacity 200ms ease-out;
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* Button base transitions */
+button, .btn {
+  transition: all 200ms ease-out;
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -12px oklch(0 0 0 / 0.15);
+}
+
+/* Gradient mesh background */
+.gradient-mesh {
+  background:
+    radial-gradient(ellipse at 20% 30%, oklch(0.55 0.18 245 / 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, oklch(0.65 0.19 145 / 0.06) 0%, transparent 50%),
+    var(--background);
+}
+
+/* Subtle dot pattern */
+.dot-pattern {
+  background-image: radial-gradient(oklch(0.80 0.01 250) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Noise texture overlay */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+/* Hero gradient */
+.hero-gradient {
+  background:
+    linear-gradient(135deg, oklch(0.99 0 0) 0%, oklch(0.98 0.005 250) 50%, oklch(0.97 0.01 250) 100%);
+}
+
+/* Glow effect for primary elements */
+.glow-primary {
+  box-shadow: 0 0 20px -5px oklch(0.55 0.18 245 / 0.4);
+}
+
+/* Medal colors */
+.medal-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  box-shadow: 0 4px 14px -4px oklch(0.70 0.18 85 / 0.5);
+}
+
+.medal-silver {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 50%, #94a3b8 100%);
+  box-shadow: 0 4px 14px -4px oklch(0.60 0.02 250 / 0.3);
+}
+
+.medal-bronze {
+  background: linear-gradient(135deg, #fdba74 0%, #fb923c 50%, #ea580c 100%);
+  box-shadow: 0 4px 14px -4px oklch(0.70 0.15 50 / 0.4);
+}
+
+/* Animation keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 400ms ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 300ms ease-out forwards;
+}
+
+/* Staggered animations */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }

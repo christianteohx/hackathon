@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -42,93 +42,208 @@ export default function LeaderboardPage() {
     fetchLeaderboard();
   }, []);
 
-  const getRankStyle = (rank: number) => {
-    if (rank === 1) return { bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-700', pill: 'bg-yellow-100 text-yellow-800' };
-    if (rank === 2) return { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-600', pill: 'bg-slate-100 text-slate-700' };
-    if (rank === 3) return { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', pill: 'bg-orange-100 text-orange-800' };
-    return { bg: 'bg-white', border: 'border-gray-200', text: 'text-gray-700', pill: 'bg-gray-100 text-gray-600' };
+  const getMedalStyle = (rank: number) => {
+    if (rank === 1) return { 
+      bg: 'bg-gradient-to-br from-amber-50 to-yellow-50', 
+      border: 'border-amber-200', 
+      medal: 'medal-gold',
+      text: 'text-amber-700'
+    };
+    if (rank === 2) return { 
+      bg: 'bg-gradient-to-br from-slate-50 to-gray-50', 
+      border: 'border-slate-200', 
+      medal: 'medal-silver',
+      text: 'text-slate-600'
+    };
+    if (rank === 3) return { 
+      bg: 'bg-gradient-to-br from-orange-50 to-amber-50', 
+      border: 'border-orange-200', 
+      medal: 'medal-bronze',
+      text: 'text-orange-700'
+    };
+    return { 
+      bg: 'bg-white', 
+      border: 'border-[var(--border)]', 
+      medal: '',
+      text: 'text-[var(--foreground)]'
+    };
   };
 
-  const getMedalEmoji = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return null;
-  };
+  const top3 = projects.slice(0, 3);
+  const rest = projects.slice(3);
 
   return (
-    <AppShell title="🏆 Leaderboard" subtitle="Ranked by Elo rating — updated after every vote">
+    <AppShell 
+      title="🏆 Leaderboard" 
+      subtitle="Ranked by Elo rating — updated after every vote"
+    >
       {loading && (
-        <p className="text-center text-gray-500 py-12">Loading leaderboard...</p>
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="w-10 h-10 border-3 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+          <p className="mt-4 text-[var(--muted-foreground)]">Loading rankings...</p>
+        </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm mb-6">
-          {error}
+        <div className="rounded-xl border border-[var(--error)]/20 bg-[var(--error)]/5 p-4 text-[var(--error)] text-sm mb-6">
+          ⚠️ {error}
         </div>
       )}
 
       {!loading && !error && projects.length === 0 && (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-12 text-center">
-          <p className="text-xl font-semibold text-gray-700 mb-2">No projects yet</p>
-          <p className="text-gray-500">
-            <a href="/submit" className="text-blue-500 hover:text-blue-600">Submit the first project</a> to get voting started!
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)] p-12 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--border)] flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <p className="text-xl font-semibold text-[var(--foreground)] mb-2">No projects yet</p>
+          <p className="text-[var(--muted-foreground)]">
+            <a href="/submit" className="text-[var(--primary)] hover:opacity-80">Submit the first project</a> to get voting started!
           </p>
         </div>
       )}
 
-      {!loading && !error && projects.length > 0 && (
-        <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      {/* Top 3 Podium */}
+      {!loading && !error && top3.length > 0 && (
+        <div className="mb-8">
+          {/* Podium cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* 2nd place */}
+            {top3[1] && (
+              <div className={`rounded-xl border ${getMedalStyle(2).border} ${getMedalStyle(2).bg} p-5 card-hover`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-10 h-10 rounded-full ${getMedalStyle(2).medal} flex items-center justify-center text-white font-bold text-sm`}>
+                    2
+                  </div>
+                  <span className="text-sm font-semibold text-[var(--muted-foreground)]">2nd Place</span>
+                </div>
+                <h3 
+                  className="text-lg font-bold text-[var(--foreground)] truncate"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {top3[1].name}
+                </h3>
+                {top3[1].team_name && (
+                  <p className="text-sm text-[var(--muted-foreground)] mt-1">{top3[1].team_name}</p>
+                )}
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-[var(--primary)]">{Math.round(top3[1].elo_rating)}</span>
+                  <span className="text-sm text-[var(--muted-foreground)]">Elo</span>
+                </div>
+              </div>
+            )}
+            
+            {/* 1st place */}
+            {top3[0] && (
+              <div className={`rounded-xl border ${getMedalStyle(1).border} ${getMedalStyle(1).bg} p-6 card-hover md:-mt-4 md:mb-[-1rem]`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-12 h-12 rounded-full ${getMedalStyle(1).medal} flex items-center justify-center text-white font-bold text-base`}>
+                    ★
+                  </div>
+                  <span className="text-sm font-semibold text-[var(--muted-foreground)]">1st Place</span>
+                </div>
+                <h3 
+                  className="text-xl font-bold text-[var(--foreground)] truncate"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {top3[0].name}
+                </h3>
+                {top3[0].team_name && (
+                  <p className="text-sm text-[var(--muted-foreground)] mt-1">{top3[0].team_name}</p>
+                )}
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-[var(--primary)]">{Math.round(top3[0].elo_rating)}</span>
+                  <span className="text-sm text-[var(--muted-foreground)]">Elo</span>
+                </div>
+              </div>
+            )}
+            
+            {/* 3rd place */}
+            {top3[2] && (
+              <div className={`rounded-xl border ${getMedalStyle(3).border} ${getMedalStyle(3).bg} p-5 card-hover`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-10 h-10 rounded-full ${getMedalStyle(3).medal} flex items-center justify-center text-white font-bold text-sm`}>
+                    3
+                  </div>
+                  <span className="text-sm font-semibold text-[var(--muted-foreground)]">3rd Place</span>
+                </div>
+                <h3 
+                  className="text-lg font-bold text-[var(--foreground)] truncate"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {top3[2].name}
+                </h3>
+                {top3[2].team_name && (
+                  <p className="text-sm text-[var(--muted-foreground)] mt-1">{top3[2].team_name}</p>
+                )}
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-[var(--primary)]">{Math.round(top3[2].elo_rating)}</span>
+                  <span className="text-sm text-[var(--muted-foreground)]">Elo</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Rest of the rankings */}
+      {!loading && !error && rest.length > 0 && (
+        <div className="rounded-xl border border-[var(--border)] overflow-hidden bg-white shadow-sm">
           {/* Header row */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-[var(--muted)] text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
             <div className="col-span-1">Rank</div>
             <div className="col-span-7 md:col-span-6">Project</div>
             <div className="col-span-2 text-center hidden md:block">Rating</div>
             <div className="col-span-3 md:col-span-4 text-right">Links</div>
           </div>
 
-          {projects.map((project, idx) => {
-            const rank = idx + 1;
-            const style = getRankStyle(rank);
-            const medal = getMedalEmoji(rank);
+          {rest.map((project, idx) => {
+            const rank = idx + 4;
+            const style = getMedalStyle(rank);
 
             return (
               <div
                 key={project.id}
-                className={`grid grid-cols-12 gap-4 px-6 py-4 items-center border-b border-gray-100 last:border-0 transition-colors hover:bg-gray-50 ${style.bg}`}
+                className={`grid grid-cols-12 gap-4 px-6 py-4 items-center border-b border-[var(--border)] last:border-0 transition-colors hover:bg-[var(--muted)]/50 ${style.bg}`}
               >
                 {/* Rank */}
                 <div className="col-span-1">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm ${medal ? style.text : 'text-gray-500 bg-gray-200'}`}>
-                    {medal ? <span className="text-base">{medal}</span> : rank}
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm bg-[var(--muted)] text-[var(--muted-foreground)]">
+                    {rank}
                   </div>
                 </div>
 
                 {/* Project Info */}
                 <div className="col-span-8 md:col-span-6 min-w-0">
-                  <div className="font-semibold text-gray-900 text-base">{project.name}</div>
+                  <div 
+                    className="font-semibold text-[var(--foreground)] text-base truncate"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    {project.name}
+                  </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     {project.team_name && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.pill}`}>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-[var(--muted)] text-[var(--muted-foreground)]">
                         {project.team_name}
                       </span>
                     )}
                     {project.tagline && (
-                      <span className="text-xs text-gray-500 truncate">{project.tagline}</span>
+                      <span className="text-xs text-[var(--muted-foreground)] truncate">{project.tagline}</span>
                     )}
                   </div>
                 </div>
 
                 {/* Elo Rating */}
                 <div className="hidden md:flex col-span-2 flex-col items-center justify-center">
-                  <span className="text-2xl font-bold text-blue-500 leading-none">{Math.round(project.elo_rating)}</span>
-                  <span className="text-xs text-gray-400 mt-0.5">Elo</span>
+                  <span className="text-2xl font-bold text-[var(--primary)] leading-none">{Math.round(project.elo_rating)}</span>
+                  <span className="text-xs text-[var(--muted-foreground)] mt-0.5">Elo</span>
                 </div>
 
                 {/* Mobile elo */}
                 <div className="md:hidden col-span-3 flex flex-col items-end">
-                  <span className="text-lg font-bold text-blue-500">{Math.round(project.elo_rating)}</span>
-                  <span className="text-xs text-gray-400">Elo</span>
+                  <span className="text-lg font-bold text-[var(--primary)]">{Math.round(project.elo_rating)}</span>
+                  <span className="text-xs text-[var(--muted-foreground)]">Elo</span>
                 </div>
 
                 {/* Links */}
@@ -138,7 +253,7 @@ export default function LeaderboardPage() {
                       href={project.demo_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-md bg-blue-500 text-white text-xs font-medium hover:bg-blue-600 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-[var(--primary)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
                     >
                       Demo
                     </a>
@@ -148,7 +263,7 @@ export default function LeaderboardPage() {
                       href={project.github_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-md bg-gray-800 text-white text-xs font-medium hover:bg-gray-900 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-[var(--foreground)] text-[var(--background)] text-xs font-semibold hover:opacity-90 transition-opacity"
                     >
                       GitHub
                     </a>
@@ -161,8 +276,8 @@ export default function LeaderboardPage() {
       )}
 
       {!loading && !error && projects.length > 0 && (
-        <p className="mt-6 text-sm text-gray-500 text-center">
-          {projects.length} project{projects.length !== 1 ? 's' : ''} · Leaderboard updates after every vote
+        <p className="mt-6 text-sm text-[var(--muted-foreground)] text-center">
+          {projects.length} project{projects.length !== 1 ? 's' : ''} ranked · Leaderboard updates after every vote
         </p>
       )}
     </AppShell>

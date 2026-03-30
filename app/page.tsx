@@ -1,4 +1,5 @@
 "use client";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -34,87 +35,174 @@ export default function HomePage() {
     fetchHackathons();
   }, []);
 
-  if (loading) {
-    return (
-      <main className="w-full min-h-screen flex flex-col bg-white">
-        <div className="max-w-5xl mx-auto px-6 py-24 text-center">
-          <div className="h-10 w-48 bg-gray-200 rounded-lg mx-auto animate-pulse" />
-        </div>
-      </main>
-    );
-  }
-
   return (
-    <main className="w-full min-h-screen flex flex-col bg-white">
-      {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 py-24 text-center">
-        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
-          Hackathon Voting<br />Platform
-        </h1>
-        <p className="mt-6 text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
-          Discover innovative projects, vote for your favorites, and crown a winner. A clean, fair way to judge hackathon submissions.
-        </p>
-        <div className="mt-10 flex gap-4 justify-center">
-          <Link
-            href="/submit"
-            className="px-6 py-3 rounded-lg bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-colors shadow-sm"
-          >
-            Submit a Project
-          </Link>
-          <Link
-            href="/vote"
-            className="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
-          >
-            Start Voting
-          </Link>
+    <main className="min-h-screen flex flex-col">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 hero-gradient" />
+        <div className="absolute inset-0 dot-pattern opacity-50" />
+        <div className="absolute inset-0 noise-overlay" />
+        
+        {/* Decorative elements */}
+        <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-[var(--primary)]/10 blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-[var(--success)]/10 blur-3xl" />
+        
+        {/* Content */}
+        <div className="relative max-w-5xl mx-auto px-6 py-24 md:py-32">
+          <div className="text-center">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-sm font-semibold mb-8 animate-fade-in-up">
+              <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" />
+              Voting is live
+            </div>
+            
+            {/* Heading */}
+            <h1 
+              className="text-5xl md:text-7xl font-bold text-[var(--foreground)] tracking-tight leading-[0.95] mb-6 animate-fade-in-up stagger-1"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              Build. Vote.
+              <br />
+              <span className="text-[var(--primary)]">Win.</span>
+            </h1>
+            
+            {/* Subtitle */}
+            <p className="mt-6 text-xl text-[var(--muted-foreground)] max-w-2xl mx-auto leading-relaxed animate-fade-in-up stagger-2">
+              The fairest way to judge hackathon submissions. 
+              Blind voting, live leaderboards, and Elo-based rankings.
+            </p>
+            
+            {/* CTA Buttons */}
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up stagger-3">
+              <Link
+                href="/submit"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-[var(--primary)] text-white font-semibold text-base hover:opacity-90 transition-all hover:shadow-lg hover:shadow-[var(--primary)]/25 glow-primary"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Submit Project
+              </Link>
+              <Link
+                href="/vote"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border-2 border-[var(--border)] text-[var(--foreground)] font-semibold text-base hover:bg-[var(--muted)] transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Start Voting
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Active Hackathons */}
-      <section className="max-w-5xl mx-auto px-6 pb-24 w-full">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Active Hackathons</h2>
-
-        {hackathons.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-12 text-center">
-            <p className="text-gray-600 text-lg">No active hackathons found. Check back soon!</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {hackathons.map((hackathon) => (
-              <Link
-                key={hackathon.id}
-                href={`/${hackathon.slug}`}
-                className="group rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200"
+      <section className="flex-1 bg-[var(--background)]">
+        <div className="max-w-5xl mx-auto px-6 py-16 w-full">
+          {/* Section header */}
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 
+                className="text-3xl font-bold text-[var(--foreground)] tracking-tight"
+                style={{ fontFamily: 'var(--font-display)' }}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-500 transition-colors">
-                      {hackathon.name}
-                    </h3>
-                    {hackathon.description && (
-                      <p className="mt-2 text-sm text-gray-500 line-clamp-2">{hackathon.description}</p>
-                    )}
-                    <p className="mt-3 text-xs text-gray-400">
-                      {new Date(hackathon.start_date).toLocaleDateString()} – {new Date(hackathon.end_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                Active Hackathons
+              </h2>
+              <p className="mt-2 text-[var(--muted-foreground)]">
+                Join an event and start competing
+              </p>
+            </div>
+            <Link 
+              href="/leaderboard" 
+              className="text-sm font-semibold text-[var(--primary)] hover:opacity-80 transition-opacity flex items-center gap-1"
+            >
+              View all
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
-        )}
+
+          {loading ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {[1, 2].map((i) => (
+                <div key={i} className="rounded-xl border border-[var(--border)] bg-white p-6 animate-pulse">
+                  <div className="h-6 w-32 bg-[var(--muted)] rounded mb-3" />
+                  <div className="h-4 w-full bg-[var(--muted)] rounded mb-2" />
+                  <div className="h-4 w-3/4 bg-[var(--muted)] rounded" />
+                </div>
+              ))}
+            </div>
+          ) : hackathons.length === 0 ? (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)] p-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--border)] flex items-center justify-center">
+                <svg className="w-8 h-8 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-lg font-semibold text-[var(--foreground)] mb-2">No active hackathons</p>
+              <p className="text-[var(--muted-foreground)]">Check back soon for upcoming events!</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {hackathons.map((hackathon, idx) => (
+                <Link
+                  key={hackathon.id}
+                  href={`/${hackathon.slug}`}
+                  className={`group rounded-xl border border-[var(--border)] bg-white p-6 card-hover animate-fade-in-up stagger-${idx + 1}`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      {/* Status badge */}
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--success)]/10 text-[var(--success)] text-xs font-semibold mb-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
+                        Active
+                      </div>
+                      
+                      <h3 
+                        className="text-lg font-bold text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors"
+                        style={{ fontFamily: 'var(--font-display)' }}
+                      >
+                        {hackathon.name}
+                      </h3>
+                      
+                      {hackathon.description && (
+                        <p className="mt-2 text-sm text-[var(--muted-foreground)] line-clamp-2">
+                          {hackathon.description}
+                        </p>
+                      )}
+                      
+                      <p className="mt-3 text-xs text-[var(--muted-foreground)]">
+                        {new Date(hackathon.start_date).toLocaleDateString()} – {new Date(hackathon.end_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-gray-200 py-8">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <Link href="/leaderboard" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
-            View all leaderboards →
+      <footer className="border-t border-[var(--border)] py-8 bg-[var(--background)]">
+        <div className="max-w-5xl mx-auto px-6 flex items-center justify-between">
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Powered by Hackathon Voting Platform
+          </p>
+          <Link 
+            href="/leaderboard" 
+            className="text-sm font-semibold text-[var(--primary)] hover:opacity-80 transition-opacity"
+          >
+            View leaderboards →
           </Link>
         </div>
       </footer>

@@ -62,7 +62,7 @@ export default function VotePage() {
   if (!leftProject || !rightProject) {
     return (
       <AppShell title="Vote" subtitle="Project pair unavailable.">
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-[var(--error)]">
           Unable to load the current vote pair.
         </p>
       </AppShell>
@@ -87,30 +87,36 @@ export default function VotePage() {
   }
 
   return (
-    <AppShell title="🗳️ Voting" subtitle="Pick the better project in each matchup. All votes are anonymous.">
+    <AppShell 
+      title="🗳️ Voting" 
+      subtitle="Pick the better project in each matchup. All votes are anonymous."
+    >
       {/* Blind Mode Toggle */}
-      <div className="mb-8 rounded-xl border border-gray-200 bg-gray-50 p-6">
+      <div className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--muted)] p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 
+              className="text-sm font-semibold text-[var(--foreground)]"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
               Blind Voting Mode
             </h3>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
               Hide project and team names while voting to reduce bias. Names are revealed after you cast your vote.
             </p>
           </div>
           <button
             type="button"
             onClick={toggleBlindMode}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-              isBlindMode ? "bg-blue-500" : "bg-gray-300"
+            className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 ${
+              isBlindMode ? "bg-[var(--primary)]" : "bg-[var(--muted-foreground)]/30"
             }`}
             aria-pressed={isBlindMode}
             aria-label={isBlindMode ? "Disable blind voting mode" : "Enable blind voting mode"}
           >
             <span className="sr-only">Toggle blind voting mode</span>
             <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
                 isBlindMode ? "translate-x-5" : "translate-x-0"
               }`}
             />
@@ -118,20 +124,21 @@ export default function VotePage() {
         </div>
         <div className="mt-3 flex items-center gap-2">
           <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${
               isBlindMode
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-700"
+                ? "bg-[var(--primary)] text-white"
+                : "bg-[var(--border)] text-[var(--muted-foreground)]"
             }`}
           >
             {isBlindMode ? "✓ Blind mode ON" : "Blind mode OFF"}
           </span>
           {isBlindMode && (
-            <span className="text-xs text-gray-400">Project names hidden during voting</span>
+            <span className="text-xs text-[var(--muted-foreground)]">Project names hidden during voting</span>
           )}
         </div>
       </div>
 
+      {/* Vote Duel */}
       <VoteDuel
         left={leftProject}
         right={rightProject}
@@ -140,12 +147,14 @@ export default function VotePage() {
         isBlindMode={isBlindMode}
       />
 
-      <p className="mt-6 text-sm text-gray-500">
-        You've voted on <span className="font-semibold text-gray-700">{voteCount}</span> matchups.
+      {/* Vote count */}
+      <p className="mt-6 text-sm text-[var(--muted-foreground)] text-center">
+        You've voted on <span className="font-semibold text-[var(--foreground)]">{voteCount}</span> matchups.
       </p>
 
-      <div className="mt-2">
-        <Link href="/my" className="text-sm text-blue-500 hover:text-blue-600">
+      {/* Need to update link */}
+      <div className="mt-4 text-center">
+        <Link href="/my" className="text-sm text-[var(--primary)] hover:opacity-80 transition-opacity">
           Need to update your project first?
         </Link>
       </div>
