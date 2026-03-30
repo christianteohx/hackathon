@@ -16,44 +16,67 @@ export function AppShell({
   const { isAuthed, user, logout, openAuthModal } = useAppState();
 
   return (
-    <main className="w-full px-6 py-12 min-h-screen flex flex-col bg-white">
-      <div className="max-w-5xl mx-auto w-full">
+    <main className="min-h-screen flex flex-col bg-[var(--background)]">
+      <div className="max-w-5xl mx-auto w-full px-6 py-12">
+        {/* Page Header */}
         <header className="mb-10">
-          <nav className="flex items-center gap-2 mb-6 flex-wrap">
-            <Link href="/" className={linkClassName}>Home</Link>
-            <Link href="/vote" className={linkClassName}>Vote</Link>
-            <Link href="/my" className={linkClassName}>My</Link>
-            <Link href="/leaderboard" className={linkClassName}>Board</Link>
+          {/* Breadcrumb / Back nav */}
+          <div className="flex items-center gap-2 mb-6 text-sm">
+            <Link href="/" className="text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors">
+              Home
+            </Link>
+            <span className="text-[var(--muted-foreground)]">/</span>
+            <span className="text-[var(--foreground)]">{title}</span>
+            
+            {/* Auth */}
+            <div className="ml-auto flex items-center gap-3">
+              {!isAuthed ? (
+                <button 
+                  type="button" 
+                  onClick={() => openAuthModal("sign in")} 
+                  className="px-4 py-1.5 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                >
+                  Login
+                </button>
+              ) : (
+                <>
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[var(--muted)] text-[var(--muted-foreground)]">
+                    {user?.email?.split('@')[0]}
+                  </span>
+                  <button 
+                    type="button" 
+                    onClick={logout} 
+                    className="text-xs font-medium text-[var(--error)] hover:opacity-80 transition-opacity"
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
 
-            {!isAuthed ? (
-              <button type="button" onClick={() => openAuthModal("sign in")} className={loginBtnClassName}>
-                Login
-              </button>
-            ) : (
-              <>
-                <span className={userBadgeClassName}>{user?.email?.split('@')[0]}</span>
-                <button type="button" onClick={logout} className={logoutBtnClassName}>Logout</button>
-              </>
-            )}
-          </nav>
-
-          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+          {/* Title */}
+          <h1 
+            className="text-4xl md:text-5xl font-bold text-[var(--foreground)] tracking-tight"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
             {title}
           </h1>
+          
+          {/* Subtitle */}
           {subtitle && (
-            <p className="text-base text-gray-500 mt-2">
+            <p className="mt-3 text-lg text-[var(--muted-foreground)] max-w-2xl">
               {subtitle}
             </p>
           )}
+          
+          {/* Divider */}
+          <div className="mt-8 h-px bg-[var(--border)]" />
         </header>
 
+        {/* Content */}
         {children}
       </div>
     </main>
   );
 }
-
-const linkClassName = "text-gray-500 hover:text-blue-500 transition-colors px-3 py-1 rounded-md text-sm font-medium";
-const loginBtnClassName = "ml-auto px-4 py-2 rounded-md bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-colors shadow-sm";
-const userBadgeClassName = "ml-auto px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700";
-const logoutBtnClassName = "px-3 py-1 rounded-md text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors";
