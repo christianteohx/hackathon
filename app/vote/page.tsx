@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { VoteDuel } from "@/components/VoteDuel";
 import { useAppState } from "@/lib/app-state";
+import { supabase } from "@/lib/supabase";
 
 // localStorage-based vote protection
 function getVotedPairs(): string[] {
@@ -37,9 +38,23 @@ export default function VotePage() {
 
   const router = useRouter();
   const [voteCount, setVoteCount] = useState(0);
+  const [totalVotes, setTotalVotes] = useState<number | null>(null);
 
   useEffect(() => {
     setVoteCount(getVotedPairs().length);
+  }, []);
+
+  // Fetch total global vote count from Supabase
+  useEffect(() => {
+    const fetchTotalVotes = async () => {
+      const { count, error } = await supabase
+        .from('votes')
+        .select('*', { count: 'exact', head: true });
+      if (!error && count !== null) {
+        setTotalVotes(count);
+      }
+    };
+    fetchTotalVotes();
   }, []);
 
   useEffect(() => {
@@ -147,10 +162,23 @@ export default function VotePage() {
         isBlindMode={isBlindMode}
       />
 
-      {/* Vote count */}
-      <p className="mt-6 text-sm text-[var(--muted-foreground)] text-center">
-        You've voted on <span className="font-semibold text-[var(--foreground)]">{voteCount}</span> matchups.
-      </p>
+      {/* Voting Progress */}
+      <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-[var(--muted-foreground)]">
+        <p>
+          You've voted on{' '}
+          <span className="font-semibold text-[var(--foreground)]">{voteCount}</span>
+          {' '}matchup{voteCount !== 1 ? 's' : ''} this session
+        </p>
+        {totalVotes !== null && (
+          <>
+            <span className="hidden sm:inline text-[var(--border)]">·</span>
+            <p>
+              <span className="font-semibold text-[var(--foreground)]">{totalVotes.toLocaleString()}</span>
+              {' '}total vote{totalVotes !== 1 ? 's' : ''} cast
+            </p>
+          </>
+        )}
+      </div>
 
       {/* Need to update link */}
       <div className="mt-4 text-center">
