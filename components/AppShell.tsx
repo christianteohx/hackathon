@@ -19,7 +19,7 @@ export function AppShell({
     <main className="min-h-screen flex flex-col bg-[var(--background)]">
       <div className="max-w-5xl mx-auto w-full px-6 py-12">
         {/* Page Header */}
-        <header className="mb-10">
+        <header className="mb-10 print:hidden">
           {/* Breadcrumb / Back nav */}
           <div className="flex items-center gap-2 mb-6 text-sm">
             <Link href="/" className="text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors">

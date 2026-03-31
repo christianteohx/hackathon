@@ -445,4 +445,12 @@ button, .btn {
     text-decoration: none !important;
   }
 
+  .leaderboard-print-root > * {
+    display: none !important;
+  }
+
+  .leaderboard-print-root .leaderboard-print-only {
+    display: block !important;
+  }
+
 }
