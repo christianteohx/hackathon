@@ -112,6 +112,7 @@ export type Database = {
           join_code: string;
           name: string;
           tagline?: string; team_name?: string | null;
+          tags?: string;
           updated_at?: string;
         };
         Relationships: [
@@ -134,6 +135,7 @@ export type Database = {
           join_code: string;
           name: string;
           tagline: string; team_name: string | null;
+          tags: string;
           updated_at: string;
         };
         Update: {
@@ -147,6 +149,7 @@ export type Database = {
           join_code?: string;
           name?: string;
           tagline?: string; team_name?: string | null;
+          tags?: string;
           updated_at?: string;
         };
       };

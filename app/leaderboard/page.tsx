@@ -19,11 +19,13 @@ type Project = {
 
 export default function LeaderboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [trendingProjects, setTrendingProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'elo' | 'trending'>('elo');
 
   // Extract all unique tags from projects
   const allTags = Array.from(
@@ -35,7 +37,7 @@ export default function LeaderboardPage() {
       setLoading(true);
       const { data, error: fetchError } = await supabase
         .from('projects')
-        .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code')
+        .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags')
         .order('elo_rating', { ascending: false })
         .limit(50);
 
@@ -43,17 +45,74 @@ export default function LeaderboardPage() {
         console.error('Error fetching leaderboard:', fetchError);
         setError('Could not load leaderboard. Please try again.');
       } else {
-        setProjects(data || []);
+        // Parse comma-separated tags into array
+        const parsed = (data || []).map((p: Record<string, unknown>) => ({
+          ...p,
+          tags: p.tags ? (p.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+        }));
+        setProjects(parsed as Project[]);
       }
       setLoading(false);
     };
 
     fetchLeaderboard();
+
+    const fetchTrending = async () => {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+      // Get vote counts per project (as winner) in the last 24 hours
+      const { data: votesData, error: votesError } = await supabase
+        .from('votes')
+        .select('winner_project_id, created_at')
+        .gte('created_at', twentyFourHoursAgo);
+
+      if (votesError) {
+        console.error('Error fetching trending votes:', votesError);
+        return;
+      }
+
+      // Count votes per project
+      const voteCounts: Record<string, number> = {};
+      (votesData || []).forEach((vote: { winner_project_id: string }) => {
+        voteCounts[vote.winner_project_id] = (voteCounts[vote.winner_project_id] || 0) + 1;
+      });
+
+      // Get project ids sorted by vote count
+      const sortedIds = Object.entries(voteCounts)
+        .sort(([, a], [, b]) => b - a)
+        .map(([id]) => id);
+
+      if (sortedIds.length === 0) {
+        setTrendingProjects([]);
+        return;
+      }
+
+      // Fetch full project data for trending projects
+      const { data: trendingData } = await supabase
+        .from('projects')
+        .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags')
+        .in('id', sortedIds);
+
+      // Sort by vote count order and parse tags
+      if (trendingData) {
+        const parsed = (trendingData as Record<string, unknown>[]).map((p) => ({
+          ...p,
+          tags: p.tags ? (p.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+        }));
+        const sorted = sortedIds
+          .map(id => parsed.find((p: Record<string, unknown>) => p.id === id))
+          .filter(Boolean) as Project[];
+        setTrendingProjects(sorted);
+      }
+    };
+
+    fetchTrending();
   }, []);
 
   // Filter projects by search query and selected tag
   useEffect(() => {
-    let result = projects;
+    const sourceProjects = activeTab === 'trending' ? trendingProjects : projects;
+    let result = sourceProjects;
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -70,7 +129,7 @@ export default function LeaderboardPage() {
     }
 
     setFilteredProjects(result);
-  }, [projects, searchQuery, selectedTag]);
+  }, [projects, trendingProjects, searchQuery, selectedTag, activeTab]);
 
   const getMedalStyle = (rank: number) => {
     if (rank === 1) return { 
@@ -103,10 +162,34 @@ export default function LeaderboardPage() {
   const rest = filteredProjects.slice(3);
 
   return (
-    <AppShell 
-      title="🏆 Leaderboard" 
-      subtitle="Ranked by Elo rating — updated after every vote"
+    <AppShell
+      title="🏆 Leaderboard"
+      subtitle={activeTab === 'elo' ? 'Ranked by Elo rating — updated after every vote' : 'Ranked by votes in the last 24 hours'}
     >
+      {/* Tab Switcher */}
+      <div className="mb-6 flex gap-2">
+        <button
+          onClick={() => setActiveTab('elo')}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            activeTab === 'elo'
+              ? 'bg-[var(--primary)] text-white'
+              : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--border)]'
+          }`}
+        >
+          🏅 Elo Rating
+        </button>
+        <button
+          onClick={() => setActiveTab('trending')}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            activeTab === 'trending'
+              ? 'bg-[var(--primary)] text-white'
+              : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--border)]'
+          }`}
+        >
+          📈 Trending
+        </button>
+      </div>
+
       {/* Search & Filter Bar */}
       {!loading && !error && (
         <div className="mb-6 flex flex-col sm:flex-row gap-3">
