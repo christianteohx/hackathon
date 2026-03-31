@@ -258,6 +258,56 @@ export default function VotePage() {
         </div>
       </div>
 
+      {/* Anonymous Voting Mode Toggle */}
+      <div className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--muted)] p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 
+              className="text-sm font-semibold text-[var(--foreground)]"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              Anonymous Voting
+            </h3>
+            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+              Your vote will not be linked to your identity. This helps protect voter privacy.
+            </p>
+          </div>
+          <div className="tooltip-wrapper">
+            <button
+              type="button"
+              onClick={toggleBlindMode}
+              className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 ${
+                isBlindMode ? "bg-[var(--primary)]" : "bg-[var(--muted-foreground)]/30"
+              }`}
+              aria-pressed={isBlindMode}
+              aria-label={isBlindMode ? "Disable blind voting mode" : "Enable blind voting mode"}
+            >
+              <span className="sr-only">Toggle blind voting mode</span>
+              <span
+                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                  isBlindMode ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+            <span className="tooltip-content">Toggle to hide/show project names while voting</span>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${
+              isBlindMode
+                ? "bg-[var(--primary)] text-white"
+                : "bg-[var(--border)] text-[var(--muted-foreground)]"
+            }`}
+          >
+            {isBlindMode ? "✓ Blind mode ON" : "Blind mode OFF"}
+          </span>
+          {isBlindMode && (
+            <span className="text-xs text-[var(--muted-foreground)]">Project names hidden during voting</span>
+          )}
+        </div>
+      </div>
+
       {/* Session Timeout Warning */}
       {showTimeoutWarning && (
         <div className="mb-6 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/5 p-4 flex items-center justify-between gap-4 animate-soft-pulse">
