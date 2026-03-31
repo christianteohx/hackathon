@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Project } from "@/lib/types";
 import { ProjectCard } from "./ProjectCard";
 
@@ -19,15 +19,35 @@ export function VoteDuel({
 }) {
   const [voteConfirmed, setVoteConfirmed] = useState(false);
   const [votedWinnerId, setVotedWinnerId] = useState<string | null>(null);
+  // Animation state for card exit
+  const [animatingOut, setAnimatingOut] = useState<"left" | "right" | null>(null);
+  const [fadeKey, setFadeKey] = useState(0); // increments to trigger fade-in on new pair
 
-  const handleVote = (winnerId: string) => {
-    if (isBlindMode) {
-      setVotedWinnerId(winnerId);
-      setVoteConfirmed(true);
-    } else {
-      onVote(winnerId);
-    }
-  };
+  // Fade in when a new pair mounts (key changes)
+  useEffect(() => {
+    setFadeKey((k) => k + 1);
+  }, [left.id, right.id]);
+
+  const handleVote = useCallback((winnerId: string) => {
+    // Determine which card to animate out (the loser)
+    const loser = winnerId === left.id ? right.id : left.id;
+    const loserSide = winnerId === left.id ? "right" : "left";
+
+    setAnimatingOut(loserSide);
+
+    // After animation completes, call onVote and show confirmation
+    const timer = setTimeout(() => {
+      setAnimatingOut(null);
+      if (isBlindMode) {
+        setVotedWinnerId(winnerId);
+        setVoteConfirmed(true);
+      } else {
+        onVote(winnerId);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [left.id, right.id, isBlindMode, onVote]);
 
   const handleContinue = () => {
     if (votedWinnerId) {
@@ -58,7 +78,7 @@ export function VoteDuel({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 
+            <h2
               className="text-2xl font-bold text-[var(--foreground)]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
@@ -73,8 +93,8 @@ export function VoteDuel({
         {/* Revealed projects */}
         <div className="grid gap-6 md:grid-cols-2">
           <div className={`rounded-xl p-5 border-2 transition-all ${
-            winner.id === votedWinnerId 
-              ? 'border-[var(--success)] bg-[var(--success)]/5 shadow-lg' 
+            winner.id === votedWinnerId
+              ? 'border-[var(--success)] bg-[var(--success)]/5 shadow-lg'
               : 'border-[var(--border)] bg-[var(--muted)]'
           }`}>
             <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
@@ -85,7 +105,7 @@ export function VoteDuel({
             {isBlindMode ? (
               <div className="rounded-lg bg-white p-4 text-center">
                 <p className="font-semibold text-[var(--foreground)]">{winner.name}</p>
-                <p className="text-sm text-[var(--muted-foreground)] mt-1">{winner.owner || 'Unknown Team'}</p>
+                <p className="text-sm text-[var(--muted-foreground)] mt-1">{winner.team_name || winner.owner || 'Unknown Team'}</p>
               </div>
             ) : (
               <ProjectCard project={winner} />
@@ -96,7 +116,7 @@ export function VoteDuel({
             {isBlindMode ? (
               <div className="rounded-lg bg-white p-4 text-center">
                 <p className="font-semibold text-[var(--foreground)]">{loser.name}</p>
-                <p className="text-sm text-[var(--muted-foreground)] mt-1">{loser.owner || 'Unknown Team'}</p>
+                <p className="text-sm text-[var(--muted-foreground)] mt-1">{loser.team_name || loser.owner || 'Unknown Team'}</p>
               </div>
             ) : (
               <ProjectCard project={loser} />
@@ -120,10 +140,13 @@ export function VoteDuel({
   }
 
   return (
-    <section className="rounded-2xl border border-[var(--border)] bg-white p-8 shadow-sm">
+    <section
+      key={fadeKey}
+      className="rounded-2xl border border-[var(--border)] bg-white p-8 shadow-sm animate-vote-fade-in"
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <h2 
+        <h2
           className="text-2xl font-bold text-[var(--foreground)]"
           style={{ fontFamily: 'var(--font-display)' }}
         >
@@ -137,19 +160,29 @@ export function VoteDuel({
       <div className="grid gap-6 md:grid-cols-2">
         {/* Left Project */}
         <div className="flex flex-col gap-4">
-          {isBlindMode ? (
-            <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-12 text-center">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--border)] flex items-center justify-center">
-                <svg className="w-6 h-6 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
+          <div
+            className={
+              animatingOut === "left"
+                ? "animate-slide-out-left"
+                : animatingOut !== null
+                ? "opacity-40 transition-opacity duration-300"
+                : ""
+            }
+          >
+            {isBlindMode ? (
+              <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-12 text-center">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--border)] flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                </div>
+                <p className="text-[var(--muted-foreground)] font-medium">Project hidden in blind mode</p>
+                <p className="text-xs text-[var(--muted-foreground)] mt-1">Names revealed after voting</p>
               </div>
-              <p className="text-[var(--muted-foreground)] font-medium">Project hidden in blind mode</p>
-              <p className="text-xs text-[var(--muted-foreground)] mt-1">Names revealed after voting</p>
-            </div>
-          ) : (
-            <ProjectCard project={left} />
-          )}
+            ) : (
+              <ProjectCard project={left} />
+            )}
+          </div>
           <button
             type="button"
             onClick={() => handleVote(left.id)}
@@ -164,19 +197,29 @@ export function VoteDuel({
 
         {/* Right Project */}
         <div className="flex flex-col gap-4">
-          {isBlindMode ? (
-            <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-12 text-center">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--border)] flex items-center justify-center">
-                <svg className="w-6 h-6 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
+          <div
+            className={
+              animatingOut === "right"
+                ? "animate-slide-out-right"
+                : animatingOut !== null
+                ? "opacity-40 transition-opacity duration-300"
+                : ""
+            }
+          >
+            {isBlindMode ? (
+              <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-12 text-center">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--border)] flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                </div>
+                <p className="text-[var(--muted-foreground)] font-medium">Project hidden in blind mode</p>
+                <p className="text-xs text-[var(--muted-foreground)] mt-1">Names revealed after voting</p>
               </div>
-              <p className="text-[var(--muted-foreground)] font-medium">Project hidden in blind mode</p>
-              <p className="text-xs text-[var(--muted-foreground)] mt-1">Names revealed after voting</p>
-            </div>
-          ) : (
-            <ProjectCard project={right} />
-          )}
+            ) : (
+              <ProjectCard project={right} />
+            )}
+          </div>
           <button
             type="button"
             onClick={() => handleVote(right.id)}
