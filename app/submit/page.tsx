@@ -132,7 +132,6 @@ export default function SubmitPage() {
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<{ user: { id: string } } | null>(null);
   const [hackathonContact, setHackathonContact] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"form" | "preview">("form");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -257,10 +256,12 @@ export default function SubmitPage() {
     );
   }
 
+  const hasPreview = projectName.trim() || tagline.trim() || description.trim() || teamName.trim();
+
   return (
     <AppShell
       title="📋 Submit Your Project"
-      subtitle="Fill in the details below to add your project to the leaderboard"
+      subtitle="Fill in the details below — your preview updates as you type"
     >
       {/* Error alert */}
       {error && (
@@ -272,32 +273,6 @@ export default function SubmitPage() {
         </div>
       )}
 
-      {/* Form / Preview Tab */}
-      <div className="mb-6 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setActiveTab("form")}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            activeTab === "form"
-              ? 'bg-[var(--primary)] text-white'
-              : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--border)]'
-          }`}
-        >
-          📝 Form
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("preview")}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            activeTab === "preview"
-              ? 'bg-[var(--primary)] text-white'
-              : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--border)]'
-          }`}
-        >
-          👁️ Preview
-        </button>
-      </div>
-
       {/* Login warning */}
       {!session && (
         <div className="rounded-xl border border-[var(--warning)]/20 bg-[var(--warning)]/5 p-4 text-[var(--warning)] text-sm mb-6 flex items-start gap-3">
@@ -308,154 +283,157 @@ export default function SubmitPage() {
         </div>
       )}
 
-      {activeTab === "form" ? (
-      <form onSubmit={handleSubmit} className="max-w-xl flex flex-col gap-6">
-        {/* Team Name */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="teamName" className="text-sm font-semibold text-[var(--foreground)]">
-            Team Name
-          </label>
-          <input
-            id="teamName"
-            type="text"
-            placeholder="The Innovators"
-            value={teamName}
-            onChange={(e) => setTeamName(e.target.value)}
-            className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
-          />
-        </div>
+      {/* Form + Live Preview side by side */}
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
 
-        {/* Project Name */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="projectName" className="text-sm font-semibold text-[var(--foreground)]">
-            Project Name <span className="text-[var(--error)]">*</span>
-          </label>
-          <input
-            id="projectName"
-            type="text"
-            placeholder="Awesome App"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            required
-            className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
-          />
-        </div>
+        {/* Left: Form */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {/* Team Name */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="teamName" className="text-sm font-semibold text-[var(--foreground)]">
+              Team Name
+            </label>
+            <input
+              id="teamName"
+              type="text"
+              placeholder="The Innovators"
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+              className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
+            />
+          </div>
 
-        {/* Tagline */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="tagline" className="text-sm font-semibold text-[var(--foreground)]">
-            Tagline <span className="text-[var(--error)]">*</span>
-          </label>
-          <input
-            id="tagline"
-            type="text"
-            placeholder="One-line description of your project"
-            value={tagline}
-            onChange={(e) => setTagline(e.target.value)}
-            required
-            maxLength={100}
-            className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
-          />
-          <div className="text-xs text-[var(--muted-foreground)] text-right">{tagline.length}/100</div>
-        </div>
+          {/* Project Name */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="projectName" className="text-sm font-semibold text-[var(--foreground)]">
+              Project Name <span className="text-[var(--error)]">*</span>
+            </label>
+            <input
+              id="projectName"
+              type="text"
+              placeholder="Awesome App"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              required
+              className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
+            />
+          </div>
 
-        {/* Description */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="description" className="text-sm font-semibold text-[var(--foreground)]">
-            Description <span className="text-[var(--error)]">*</span>
-          </label>
-          <textarea
-            id="description"
-            rows={4}
-            placeholder="Describe your project. What does it do? What tech stack? What problem does it solve?"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-            maxLength={500}
-            className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all resize-none"
-          />
-          <div className="text-xs text-[var(--muted-foreground)] text-right">{description.length}/500</div>
-        </div>
+          {/* Tagline */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="tagline" className="text-sm font-semibold text-[var(--foreground)]">
+              Tagline <span className="text-[var(--error)]">*</span>
+            </label>
+            <input
+              id="tagline"
+              type="text"
+              placeholder="One-line description of your project"
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              required
+              maxLength={100}
+              className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
+            />
+            <div className="text-xs text-[var(--muted-foreground)] text-right">{tagline.length}/100</div>
+          </div>
 
-        {/* Demo URL */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="demoUrl" className="text-sm font-semibold text-[var(--foreground)]">
-            Demo URL <span className="text-[var(--muted-foreground)] font-normal">(optional)</span>
-          </label>
-          <input
-            id="demoUrl"
-            type="url"
-            placeholder="https://your-demo.com"
-            value={demoUrl}
-            onChange={(e) => setDemoUrl(e.target.value)}
-            className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
-          />
-        </div>
+          {/* Description */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="description" className="text-sm font-semibold text-[var(--foreground)]">
+              Description <span className="text-[var(--error)]">*</span>
+            </label>
+            <textarea
+              id="description"
+              rows={4}
+              placeholder="Describe your project. What does it do? What tech stack? What problem does it solve?"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+              maxLength={500}
+              className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all resize-none"
+            />
+            <div className="text-xs text-[var(--muted-foreground)] text-right">{description.length}/500</div>
+          </div>
 
-        {/* GitHub URL */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="githubUrl" className="text-sm font-semibold text-[var(--foreground)]">
-            GitHub URL <span className="text-[var(--muted-foreground)] font-normal">(optional)</span>
-          </label>
-          <input
-            id="githubUrl"
-            type="url"
-            placeholder="https://github.com/your/project"
-            value={githubUrl}
-            onChange={(e) => setGithubUrl(e.target.value)}
-            className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
-          />
-        </div>
+          {/* Demo URL */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="demoUrl" className="text-sm font-semibold text-[var(--foreground)]">
+              Demo URL <span className="text-[var(--muted-foreground)] font-normal">(optional)</span>
+            </label>
+            <input
+              id="demoUrl"
+              type="url"
+              placeholder="https://your-demo.com"
+              value={demoUrl}
+              onChange={(e) => setDemoUrl(e.target.value)}
+              className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
+            />
+          </div>
 
-        {/* Tags */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="tags" className="text-sm font-semibold text-[var(--foreground)]">
-            Tags <span className="text-[var(--muted-foreground)] font-normal">(optional, comma-separated)</span>
-          </label>
-          <input
-            id="tags"
-            type="text"
-            placeholder="ai, web3, mobile, hardware"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
-          />
-          <div className="text-xs text-[var(--muted-foreground)]">Separate tags with commas (e.g. "ai, web3, mobile")</div>
-        </div>
+          {/* GitHub URL */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="githubUrl" className="text-sm font-semibold text-[var(--foreground)]">
+              GitHub URL <span className="text-[var(--muted-foreground)] font-normal">(optional)</span>
+            </label>
+            <input
+              id="githubUrl"
+              type="url"
+              placeholder="https://github.com/your/project"
+              value={githubUrl}
+              onChange={(e) => setGithubUrl(e.target.value)}
+              className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
+            />
+          </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="mt-2 w-full rounded-xl bg-[var(--primary)] text-white px-6 py-4 font-semibold text-base hover:opacity-90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {submitting ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Submit Project
-            </>
-          )}
-        </button>
+          {/* Tags */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="tags" className="text-sm font-semibold text-[var(--foreground)]">
+              Tags <span className="text-[var(--muted-foreground)] font-normal">(optional, comma-separated)</span>
+            </label>
+            <input
+              id="tags"
+              type="text"
+              placeholder="ai, web3, mobile, hardware"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
+            />
+            <div className="text-xs text-[var(--muted-foreground)]">Separate tags with commas (e.g. "ai, web3, mobile")</div>
+          </div>
 
-        <Link href="/" className="text-sm text-[var(--muted-foreground)] hover:text-[var(--primary)] text-center transition-colors">
-          ← Back home
-        </Link>
-      </form>
-      ) : (
-        /* Preview Tab */
-        <div className="max-w-xl">
-          {projectName.trim() || tagline.trim() || description.trim() || teamName.trim() ? (
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="mt-2 w-full rounded-xl bg-[var(--primary)] text-white px-6 py-4 font-semibold text-base hover:opacity-90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Submit Project
+              </>
+            )}
+          </button>
+
+          <Link href="/" className="text-sm text-[var(--muted-foreground)] hover:text-[var(--primary)] text-center transition-colors">
+            ← Back home
+          </Link>
+        </form>
+
+        {/* Right: Live Preview Panel */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">
+            👁️ Live Preview
+          </p>
+          {hasPreview ? (
             <div className="animate-fade-in-up">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)] mb-3">
-                Live Preview
-              </p>
               <ProjectCardPreview
                 name={projectName || "Your Project Name"}
                 tagline={tagline}
@@ -479,15 +457,13 @@ export default function SubmitPage() {
               </div>
               <p className="text-lg font-semibold text-[var(--foreground)] mb-2">Nothing to preview yet</p>
               <p className="text-sm text-[var(--muted-foreground)]">
-                Fill in some details in the <button type="button" onClick={() => setActiveTab("form")} className="text-[var(--primary)] underline font-semibold">Form tab</button> to see a live preview.
+                Fill in the form on the left to see your project card preview here.
               </p>
             </div>
           )}
         </div>
-      )}
 
-      {/* ProjectCardPreview component */}
-      {activeTab === "preview" && <span />}
+      </div>
 
     </AppShell>
   );
