@@ -188,9 +188,158 @@ button, .btn {
   animation: scaleIn 300ms ease-out forwards;
 }
 
+/* Skeleton loading animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background-color: var(--muted);
+  border-radius: 6px;
+}
+
 /* Staggered animations */
 .stagger-1 { animation-delay: 50ms; }
 .stagger-2 { animation-delay: 100ms; }
 .stagger-3 { animation-delay: 150ms; }
 .stagger-4 { animation-delay: 200ms; }
 .stagger-5 { animation-delay: 250ms; }
+
+/* Mobile nav slide-in */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mobile-nav-enter {
+  animation: slideInRight 300ms ease-out forwards;
+}
+
+.mobile-backdrop-enter {
+  animation: fadeIn 200ms ease-out forwards;
+}
+
+/* Tooltip */
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip-content {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+  z-index: 100;
+  max-width: 240px;
+  white-space: normal;
+  text-align: center;
+}
+
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--foreground);
+}
+
+.tooltip-wrapper:hover .tooltip-content {
+  opacity: 1;
+}
+
+/* Vote slide-out animations */
+@keyframes slideOutLeft {
+  to {
+    opacity: 0;
+    transform: translateX(-60px) scale(0.95);
+  }
+}
+
+@keyframes slideOutRight {
+  to {
+    opacity: 0;
+    transform: translateX(60px) scale(0.95);
+  }
+}
+
+.animate-slide-out-left {
+  animation: slideOutLeft 350ms ease-in forwards;
+}
+
+.animate-slide-out-right {
+  animation: slideOutRight 350ms ease-in forwards;
+}
+
+/* Vote fade-in for new pair */
+@keyframes voteFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-vote-fade-in {
+  animation: voteFadeIn 400ms ease-out forwards;
+}
+
+/* Leaderboard row reorder animation */
+@keyframes rowShift {
+  from {
+    opacity: 0.6;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-row-shift {
+  animation: rowShift 300ms ease-out forwards;
+}
+
+/* Inactivity pulse */
+@keyframes softPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-soft-pulse {
+  animation: softPulse 2s ease-in-out infinite;
+}
