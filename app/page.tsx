@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
 interface Hackathon {
   id: string;
@@ -12,22 +13,27 @@ interface Hackathon {
   start_date: string;
   end_date: string;
   is_active: boolean;
+  voting_deadline: string | null;
 }
 
 export default function HomePage() {
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [loading, setLoading] = useState(true);
+  const [votingDeadline, setVotingDeadline] = useState<Date | null>(null);
 
   useEffect(() => {
     const fetchHackathons = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("hackathons")
         .select("*")
         .eq("is_active", true)
         .order("start_date", { ascending: false });
 
       if (!error && data) {
-        setHackathons(data);
+        setHackathons(data as Hackathon[]);
+        if (data.length > 0 && (data[0] as Hackathon).voting_deadline) {
+          setVotingDeadline(new Date((data[0] as Hackathon).voting_deadline!));
+        }
       }
       setLoading(false);
     };
@@ -52,9 +58,8 @@ export default function HomePage() {
         <div className="relative max-w-5xl mx-auto px-6 py-24 md:py-32">
           <div className="text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-sm font-semibold mb-8 animate-fade-in-up">
-              <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" />
-              Voting is live
+            <div className="mb-8 animate-fade-in-up">
+              <CountdownTimer deadline={votingDeadline} label="Voting ends" />
             </div>
             
             {/* Heading */}
