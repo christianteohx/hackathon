@@ -1,12 +1,42 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAppState } from "@/lib/app-state";
+import { supabase } from "@/lib/supabase";
 
 export default function DonePage() {
   const { voteHistory, votePairs, resetVoting } = useAppState();
   const router = useRouter();
+  const [shareUrl, setShareUrl] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const fetchHackathonSlug = async () => {
+      const { data } = await supabase
+        .from("hackathons")
+        .select("slug")
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+      if (data) {
+        const url = `${window.location.origin}/${(data as { slug: string }).slug}`;
+        setShareUrl(url);
+      }
+    };
+    fetchHackathonSlug();
+  }, []);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback: select the text
+    }
+  }
 
   return (
     <AppShell title="Done" subtitle="Thanks for casting your votes!">
@@ -24,7 +54,7 @@ export default function DonePage() {
           </div>
 
           {/* Heading */}
-          <h2 
+          <h2
             className="text-2xl font-bold text-[var(--foreground)] mb-2"
             style={{ fontFamily: 'var(--font-display)' }}
           >
@@ -54,6 +84,45 @@ export default function DonePage() {
               </p>
             </div>
           </div>
+
+          {/* Share Section */}
+          {shareUrl && (
+            <div className="mb-6 p-4 rounded-xl bg-[var(--muted)] border border-[var(--border)]">
+              <p className="text-sm font-semibold text-[var(--foreground)] mb-2">
+                Share this hackathon
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={shareUrl}
+                  className="flex-1 rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-xs text-[var(--muted-foreground)] focus:outline-none truncate"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--primary)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+                >
+                  {copied ? (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy link
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

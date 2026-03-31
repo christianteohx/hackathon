@@ -13,10 +13,12 @@ export default function SubmitPage() {
   const [description, setDescription] = useState("");
   const [demoUrl, setDemoUrl] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
+  const [tags, setTags] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<{ user: { id: string } } | null>(null);
+  const [hackathonContact, setHackathonContact] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -53,7 +55,7 @@ export default function SubmitPage() {
 
     const { data: hackathon } = await supabase
       .from("hackathons")
-      .select("id")
+      .select("id, contact_email")
       .eq("is_active", true)
       .limit(1)
       .single();
@@ -62,6 +64,10 @@ export default function SubmitPage() {
       setError("No active hackathon found. Please contact an organizer.");
       setSubmitting(false);
       return;
+    }
+
+    if ((hackathon as { contact_email?: string }).contact_email) {
+      setHackathonContact((hackathon as { contact_email: string }).contact_email);
     }
 
     const joinCode = generateJoinCode();
@@ -79,6 +85,7 @@ export default function SubmitPage() {
         created_by_user_id: session.user.id,
         hackathon_id: (hackathon as { id: string }).id,
         elo_rating: 1200,
+        tags: tags.trim(),
       });
 
     if (insertError) {
@@ -109,6 +116,14 @@ export default function SubmitPage() {
           <p className="text-[var(--muted-foreground)] mb-8 max-w-md mx-auto">
             Share your project's join code with teammates so they can edit it.
           </p>
+          {hackathonContact && (
+            <p className="text-sm text-[var(--muted-foreground)] mb-4 max-w-md mx-auto">
+              Questions? Contact the organizers at{" "}
+              <a href={`mailto:${hackathonContact}`} className="text-[var(--primary)] underline">
+                {hackathonContact}
+              </a>
+            </p>
+          )}
           <div className="flex gap-3 justify-center flex-wrap">
             <a
               href="/vote"
@@ -249,6 +264,22 @@ export default function SubmitPage() {
             onChange={(e) => setGithubUrl(e.target.value)}
             className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
           />
+        </div>
+
+        {/* Tags */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="tags" className="text-sm font-semibold text-[var(--foreground)]">
+            Tags <span className="text-[var(--muted-foreground)] font-normal">(optional, comma-separated)</span>
+          </label>
+          <input
+            id="tags"
+            type="text"
+            placeholder="ai, web3, mobile, hardware"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
+          />
+          <div className="text-xs text-[var(--muted-foreground)]">Separate tags with commas (e.g. "ai, web3, mobile")</div>
         </div>
 
         {/* Submit */}
