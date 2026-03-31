@@ -265,9 +265,9 @@ export default function OrgPage({ params }: { params: { slug: string } }) {
             Our Sponsors
           </h2>
           {hackathon.sponsor_logos && hackathon.sponsor_logos.length > 0 ? (
-            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+            <div className="flex flex-row items-center gap-8 overflow-x-auto pb-2 px-2 scrollbar-hide">
               {hackathon.sponsor_logos.map((sponsor, idx) => (
-                <div key={idx} className="flex items-center gap-2">
+                <div key={idx} className="flex-shrink-0 flex items-center gap-2">
                   {sponsor.logo_url ? (
                     <img
                       src={sponsor.logo_url}
@@ -283,12 +283,12 @@ export default function OrgPage({ params }: { params: { slug: string } }) {
               ))}
             </div>
           ) : (
-            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 opacity-40">
+            <div className="flex flex-row items-center gap-8 overflow-x-auto pb-2 px-2 opacity-40">
               {/* Placeholder sponsor logos */}
               {['TechCorp', 'CloudBase', 'DevTools Inc', 'StackHub', 'CodeFlow'].map((name) => (
                 <div
                   key={name}
-                  className="h-10 px-4 flex items-center justify-center rounded-lg bg-white border border-[var(--border)] text-sm font-semibold text-[var(--muted-foreground)]"
+                  className="flex-shrink-0 h-10 px-4 flex items-center justify-center rounded-lg bg-white border border-[var(--border)] text-sm font-semibold text-[var(--muted-foreground)]"
                 >
                   {name}
                 </div>
