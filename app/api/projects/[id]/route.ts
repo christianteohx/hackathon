@@ -46,6 +46,7 @@ export async function GET(
       joinCode: data.join_code,
       name: data.name,
       tagline: data.tagline,
+      tags: data.tags ? data.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
       updatedAt: data.updated_at,
     };
 

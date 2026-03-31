@@ -55,7 +55,7 @@ export default function HackathonPage({ params }: { params: { slug: string } }) 
           github_url: p.github_url as string | null,
           elo_rating: p.elo_rating as number | undefined,
           created_at: p.created_at as string | undefined,
-          tags: [],
+          tags: p.tags ? (p.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean) : [],
           organizationId: '', // Will be empty for hackathon projects
         }));
         setProjects(mapped);
