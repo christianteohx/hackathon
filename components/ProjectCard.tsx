@@ -43,10 +43,12 @@ export function ProjectCard({ project, highlight }: { project: Project; highligh
         </p>
       )}
       
-      {/* Description */}
-      <p className="mt-4 text-sm leading-relaxed text-[var(--muted-foreground)] flex-1">
-        {description}
-      </p>
+      {/* Short description preview */}
+      {project.description && (
+        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-[var(--muted-foreground)]">
+          {project.description}
+        </p>
+      )}
       
       {/* Tags */}
       {project.tags && project.tags.length > 0 && (
