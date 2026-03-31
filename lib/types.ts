@@ -18,6 +18,7 @@ export type Project = {
   summary?: string; // Alias for description, used in UI
   tagline?: string; 
   owner?: string; // Derived from user, not in DB directly
+  team_name?: string | null; // Team name from DB
   joinCode: string; // Maps to join_code in DB
   created_by_user_id?: string; // The user ID of the project creator
   demo_url?: string | null; 
@@ -25,7 +26,7 @@ export type Project = {
   created_at?: string; 
   updated_at?: string; 
   elo_rating?: number; // Elo rating for voting system
-  organizationId: string; // New: For multi-tenancy
+  organizationId?: string; // For multi-tenancy
   tags?: string[]; // Project category tags
 }; 
 
