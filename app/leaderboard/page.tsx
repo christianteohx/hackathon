@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AppShell } from '@/components/AppShell';
 
@@ -15,7 +15,21 @@ type Project = {
   elo_rating: number;
   join_code: string;
   tags?: string[];
+  created_at?: string;
 };
+
+function formatRelativeDate(dateString?: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'today';
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return `${Math.floor(diffDays / 30)} months ago`;
+}
 
 export default function LeaderboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -26,13 +40,44 @@ export default function LeaderboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'elo' | 'trending'>('elo');
+  const [judgeScores, setJudgeScores] = useState<Record<string, number>>({});
+  const [newProjectIds, setNewProjectIds] = useState<Set<string>>(new Set());
+  const prevProjectsRef = useRef<string[]>([]);
 
   // Extract all unique tags from projects
   const allTags = Array.from(
     new Set(projects.flatMap((p) => p.tags ?? []))
   ).sort();
 
+  // Fetch judge scores for all projects
+  const fetchJudgeScores = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('judge_scores')
+        .select('project_id, innovation, technical, presentation, impact');
+      if (error) return;
+      // Average score per project (avg of all 4 dimensions)
+      const scores: Record<string, number[]> = {};
+      (data || []).forEach((s: { project_id: string; innovation: number; technical: number; presentation: number; impact: number }) => {
+        const avg = (s.innovation + s.technical + s.presentation + s.impact) / 4;
+        if (!scores[s.project_id]) scores[s.project_id] = [];
+        scores[s.project_id].push(avg);
+      });
+      const avgScores: Record<string, number> = {};
+      Object.entries(scores).forEach(([id, arr]) => {
+        avgScores[id] = arr.reduce((a, b) => a + b, 0) / arr.length;
+      });
+      setJudgeScores(avgScores);
+    } catch {
+      // silently fail
+    }
+  };
+
   useEffect(() => {
+    fetchJudgeScores();
+  }, []);
+
+  useEffect(() =>
     const fetchLeaderboard = async () => {
       setLoading(true);
       const { data, error: fetchError } = await supabase
@@ -107,7 +152,27 @@ export default function LeaderboardPage() {
     };
 
     fetchTrending();
+    // Poll for leaderboard updates every 30s
+    const poll = setInterval(() => {
+      fetchLeaderboard();
+      fetchTrending();
+      fetchJudgeScores();
+    }, 30000);
+    return () => clearInterval(poll);
   }, []);
+
+  // Track which project IDs are new since last render (for row animation)
+  useEffect(() => {
+    const currentIds = projects.map((p) => p.id);
+    const newIds = new Set(currentIds.filter((id) => !prevProjectsRef.current.includes(id)));
+    if (newIds.size > 0) {
+      setNewProjectIds(newIds);
+      // Clear the "new" flag after animation completes
+      const timer = setTimeout(() => setNewProjectIds(new Set()), 800);
+      return () => clearTimeout(timer);
+    }
+    prevProjectsRef.current = currentIds;
+  }, [projects]);
 
   // Filter projects by search query and selected tag
   useEffect(() => {
@@ -233,30 +298,80 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+      {!loading && !error && projects.length === 0 && (
+        <div className="rounded-2xl border border-[var(--border)] bg-white p-16 text-center animate-fade-in-up">
+          {/* Illustration */}
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[var(--muted)] flex items-center justify-center">
+            <span className="text-5xl" role="img" aria-label="Trophy">🏆</span>
+          </div>
+          <h3 className="text-2xl font-bold text-[var(--foreground)] mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+            No projects yet
+          </h3>
+          <p className="text-[var(--muted-foreground)] mb-8 max-w-sm mx-auto">
+            Be the first to submit your project and kick off the competition!
+          </p>
+          <a
+            href="/submit"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--primary)] text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Submit the First Project
+          </a>
+        </div>
+      )}
+
       {loading && (
-        <div className="flex flex-col items-center justify-center py-16">
-          <div className="w-10 h-10 border-3 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
-          <p className="mt-4 text-[var(--muted-foreground)]">Loading rankings...</p>
+        <div className="space-y-4">
+          {/* Skeleton: tab switcher */}
+          <div className="flex gap-2">
+            <div className="h-10 w-32 rounded-lg skeleton" />
+            <div className="h-10 w-32 rounded-lg skeleton" />
+          </div>
+          {/* Skeleton: search */}
+          <div className="h-12 rounded-xl skeleton" />
+          {/* Skeleton: podium */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="h-48 rounded-xl skeleton" />
+            <div className="h-56 rounded-xl skeleton md:-mt-4" />
+            <div className="h-48 rounded-xl skeleton" />
+          </div>
+          {/* Skeleton: list rows */}
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4 p-4 rounded-xl border border-[var(--border)]">
+              <div className="w-9 h-9 rounded-full skeleton flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="h-5 w-48 rounded skeleton mb-2" />
+                <div className="h-4 w-32 rounded skeleton" />
+              </div>
+              <div className="h-8 w-16 rounded skeleton flex-shrink-0" />
+            </div>
+          ))}
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl border border-[var(--error)]/20 bg-[var(--error)]/5 p-4 text-[var(--error)] text-sm mb-6">
-          ⚠️ {error}
-        </div>
-      )}
-
-      {!loading && !error && projects.length === 0 && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)] p-12 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--border)] flex items-center justify-center">
-            <svg className="w-8 h-8 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        <div className="rounded-2xl border border-[var(--error)]/20 bg-[var(--error)]/5 p-8 text-center animate-scale-in">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--error)]/10 flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--error)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <p className="text-xl font-semibold text-[var(--foreground)] mb-2">No projects yet</p>
-          <p className="text-[var(--muted-foreground)]">
-            <a href="/submit" className="text-[var(--primary)] hover:opacity-80">Submit the first project</a> to get voting started!
-          </p>
+          <h3 className="text-lg font-bold text-[var(--foreground)] mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+            Something went wrong
+          </h3>
+          <p className="text-[var(--muted-foreground)] mb-6">{error}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--primary)] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Try Again
+          </button>
         </div>
       )}
 
@@ -305,7 +420,10 @@ export default function LeaderboardPage() {
                 )}
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-[var(--primary)]">{Math.round(top3[1].elo_rating)}</span>
-                  <span className="text-sm text-[var(--muted-foreground)]">Elo</span>
+                  <span className="tooltip-wrapper">
+                    <span className="text-sm text-[var(--muted-foreground)]">Elo</span>
+                    <span className="tooltip-content">Elo rating — higher = more votes</span>
+                  </span>
                 </div>
               </div>
             )}
@@ -330,7 +448,10 @@ export default function LeaderboardPage() {
                 )}
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-4xl font-bold text-[var(--primary)]">{Math.round(top3[0].elo_rating)}</span>
-                  <span className="text-sm text-[var(--muted-foreground)]">Elo</span>
+                  <span className="tooltip-wrapper">
+                    <span className="text-sm text-[var(--muted-foreground)]">Elo</span>
+                    <span className="tooltip-content">Elo rating — higher = more votes</span>
+                  </span>
                 </div>
               </div>
             )}
@@ -355,7 +476,10 @@ export default function LeaderboardPage() {
                 )}
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-[var(--primary)]">{Math.round(top3[2].elo_rating)}</span>
-                  <span className="text-sm text-[var(--muted-foreground)]">Elo</span>
+                  <span className="tooltip-wrapper">
+                    <span className="text-sm text-[var(--muted-foreground)]">Elo</span>
+                    <span className="tooltip-content">Elo rating — higher = more votes</span>
+                  </span>
                 </div>
               </div>
             )}
@@ -413,13 +537,19 @@ export default function LeaderboardPage() {
                 {/* Elo Rating */}
                 <div className="hidden md:flex col-span-2 flex-col items-center justify-center">
                   <span className="text-2xl font-bold text-[var(--primary)] leading-none">{Math.round(project.elo_rating)}</span>
-                  <span className="text-xs text-[var(--muted-foreground)] mt-0.5">Elo</span>
+                  <span className="tooltip-wrapper">
+                    <span className="text-xs text-[var(--muted-foreground)] mt-0.5">Elo</span>
+                    <span className="tooltip-content">Elo rating — higher = more votes</span>
+                  </span>
                 </div>
 
                 {/* Mobile elo */}
                 <div className="md:hidden col-span-3 flex flex-col items-end">
                   <span className="text-lg font-bold text-[var(--primary)]">{Math.round(project.elo_rating)}</span>
-                  <span className="text-xs text-[var(--muted-foreground)]">Elo</span>
+                  <span className="tooltip-wrapper">
+                    <span className="text-xs text-[var(--muted-foreground)]">Elo</span>
+                    <span className="tooltip-content">Elo rating — higher = more votes</span>
+                  </span>
                 </div>
 
                 {/* Links */}
