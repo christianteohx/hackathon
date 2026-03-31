@@ -14,12 +14,21 @@ type Project = {
   github_url: string | null;
   elo_rating: number;
   join_code: string;
+  tags?: string[];
 };
 
 export default function LeaderboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string>('');
+
+  // Extract all unique tags from projects
+  const allTags = Array.from(
+    new Set(projects.flatMap((p) => p.tags ?? []))
+  ).sort();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -41,6 +50,27 @@ export default function LeaderboardPage() {
 
     fetchLeaderboard();
   }, []);
+
+  // Filter projects by search query and selected tag
+  useEffect(() => {
+    let result = projects;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.team_name && p.team_name.toLowerCase().includes(q)) ||
+          (p.tagline && p.tagline.toLowerCase().includes(q))
+      );
+    }
+
+    if (selectedTag) {
+      result = result.filter((p) => p.tags && p.tags.includes(selectedTag));
+    }
+
+    setFilteredProjects(result);
+  }, [projects, searchQuery, selectedTag]);
 
   const getMedalStyle = (rank: number) => {
     if (rank === 1) return { 
@@ -69,14 +99,57 @@ export default function LeaderboardPage() {
     };
   };
 
-  const top3 = projects.slice(0, 3);
-  const rest = projects.slice(3);
+  const top3 = filteredProjects.slice(0, 3);
+  const rest = filteredProjects.slice(3);
 
   return (
     <AppShell 
       title="🏆 Leaderboard" 
       subtitle="Ranked by Elo rating — updated after every vote"
     >
+      {/* Search & Filter Bar */}
+      {!loading && !error && (
+        <div className="mb-6 flex flex-col sm:flex-row gap-3">
+          {/* Search input */}
+          <div className="relative flex-1">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search projects by name, team, or tagline..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-white text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Tag filter */}
+          {allTags.length > 0 && (
+            <select
+              value={selectedTag}
+              onChange={(e) => setSelectedTag(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-[var(--border)] bg-white text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] cursor-pointer min-w-[140px]"
+            >
+              <option value="">All tags</option>
+              {allTags.map((tag) => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
       {loading && (
         <div className="flex flex-col items-center justify-center py-16">
           <div className="w-10 h-10 border-3 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
@@ -100,6 +173,26 @@ export default function LeaderboardPage() {
           <p className="text-xl font-semibold text-[var(--foreground)] mb-2">No projects yet</p>
           <p className="text-[var(--muted-foreground)]">
             <a href="/submit" className="text-[var(--primary)] hover:opacity-80">Submit the first project</a> to get voting started!
+          </p>
+        </div>
+      )}
+
+      {!loading && !error && filteredProjects.length === 0 && projects.length > 0 && (searchQuery || selectedTag) && (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)] p-12 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--border)] flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <p className="text-xl font-semibold text-[var(--foreground)] mb-2">No results found</p>
+          <p className="text-[var(--muted-foreground)]">
+            Try a different search term or{' '}
+            <button
+              onClick={() => { setSearchQuery(''); setSelectedTag(''); }}
+              className="text-[var(--primary)] hover:opacity-80"
+            >
+              clear the filters
+            </button>
           </p>
         </div>
       )}
@@ -275,9 +368,20 @@ export default function LeaderboardPage() {
         </div>
       )}
 
-      {!loading && !error && projects.length > 0 && (
+      {!loading && !error && filteredProjects.length > 0 && (
         <p className="mt-6 text-sm text-[var(--muted-foreground)] text-center">
-          {projects.length} project{projects.length !== 1 ? 's' : ''} ranked · Leaderboard updates after every vote
+          {filteredProjects.length === projects.length
+            ? `${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''} ranked`
+            : `${filteredProjects.length} of ${projects.length} projects`}
+          {' · '}Leaderboard updates after every vote
+          {(searchQuery || selectedTag) && (
+            <button
+              onClick={() => { setSearchQuery(''); setSelectedTag(''); }}
+              className="ml-2 text-[var(--primary)] hover:opacity-80 underline"
+            >
+              Clear filters
+            </button>
+          )}
         </p>
       )}
     </AppShell>
