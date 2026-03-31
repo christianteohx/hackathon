@@ -5,22 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { VoteDuel } from "@/components/VoteDuel";
+import { CountdownTimer } from "@/components/CountdownTimer";
 import { useAppState } from "@/lib/app-state";
 import { supabase } from "@/lib/supabase";
 
-// localStorage-based vote protection
-function getVotedPairs(): string[] {
-  if (typeof window === "undefined") return [];
-  const stored = localStorage.getItem("votedPairs");
-  return stored ? JSON.parse(stored) : [];
-}
-
-function markPairVoted(leftId: string, rightId: string) {
-  const key = [leftId, rightId].sort().join("|");
-  const pairs = getVotedPairs();
-  if (!pairs.includes(key)) {
-    pairs.push(key);
-    localStorage.setItem("votedPairs", JSON.stringify(pairs));
+// Read voted pair IDs from session localStorage (key must match app-state.tsx)
+function getSessionVotedPairIds(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const stored = localStorage.getItem("hackathon_voted_pairs");
+    return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
+  } catch {
+    return new Set();
   }
 }
 
@@ -39,9 +35,10 @@ export default function VotePage() {
   const router = useRouter();
   const [voteCount, setVoteCount] = useState(0);
   const [totalVotes, setTotalVotes] = useState<number | null>(null);
+  const [votingDeadline, setVotingDeadline] = useState<Date | null>(null);
 
   useEffect(() => {
-    setVoteCount(getVotedPairs().length);
+    setVoteCount(getSessionVotedPairIds().size);
   }, []);
 
   // Fetch total global vote count from Supabase
@@ -55,6 +52,23 @@ export default function VotePage() {
       }
     };
     fetchTotalVotes();
+  }, []);
+
+  // Fetch voting deadline
+  useEffect(() => {
+    const fetchVotingDeadline = async () => {
+      const { data, error } = await (supabase as any)
+        .from('hackathons')
+        .select('voting_deadline')
+        .eq('is_active', true)
+        .order('start_date', { ascending: false })
+        .limit(1)
+        .single();
+      if (!error && data?.voting_deadline) {
+        setVotingDeadline(new Date(data.voting_deadline));
+      }
+    };
+    fetchVotingDeadline();
   }, []);
 
   useEffect(() => {
@@ -91,9 +105,8 @@ export default function VotePage() {
     if (!requireAuth("cast a vote")) {
       return;
     }
-    markPairVoted(pair.leftProjectId, pair.rightProjectId);
-    setVoteCount(getVotedPairs().length);
     castVote(winnerId);
+    setVoteCount(getSessionVotedPairIds().size);
     if (voteHistory.length + 1 >= votePairs.length) {
       router.push("/done");
     } else {
@@ -106,6 +119,11 @@ export default function VotePage() {
       title="🗳️ Voting" 
       subtitle="Pick the better project in each matchup. All votes are anonymous."
     >
+      {/* Countdown Timer */}
+      <div className="mb-6">
+        <CountdownTimer deadline={votingDeadline} label="Voting ends" />
+      </div>
+
       {/* Blind Mode Toggle */}
       <div className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--muted)] p-6">
         <div className="flex items-center justify-between gap-4">
