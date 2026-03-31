@@ -77,12 +77,12 @@ export default function LeaderboardPage() {
     fetchJudgeScores();
   }, []);
 
-  useEffect(() =>
+  useEffect(() => {
     const fetchLeaderboard = async () => {
       setLoading(true);
       const { data, error: fetchError } = await supabase
         .from('projects')
-        .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags')
+        .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags, created_at')
         .order('elo_rating', { ascending: false })
         .limit(50);
 
@@ -135,7 +135,7 @@ export default function LeaderboardPage() {
       // Fetch full project data for trending projects
       const { data: trendingData } = await supabase
         .from('projects')
-        .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags')
+        .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags, created_at')
         .in('id', sortedIds);
 
       // Sort by vote count order and parse tags
@@ -408,8 +408,13 @@ export default function LeaderboardPage() {
                     2
                   </div>
                   <span className="text-sm font-semibold text-[var(--muted-foreground)]">2nd Place</span>
+                  {judgeScores[top3[1].id] != null && (
+                    <span className="ml-auto inline-flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] border border-[var(--warning)]/20">
+                      ★ {judgeScores[top3[1].id].toFixed(1)}
+                    </span>
+                  )}
                 </div>
-                <h3 
+                <h3
                   className="text-lg font-bold text-[var(--foreground)] truncate"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
@@ -417,6 +422,9 @@ export default function LeaderboardPage() {
                 </h3>
                 {top3[1].team_name && (
                   <p className="text-sm text-[var(--muted-foreground)] mt-1">{top3[1].team_name}</p>
+                )}
+                {top3[1].created_at && (
+                  <p className="text-xs text-[var(--muted-foreground)] mt-1">Submitted {formatRelativeDate(top3[1].created_at)}</p>
                 )}
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-[var(--primary)]">{Math.round(top3[1].elo_rating)}</span>
@@ -427,7 +435,7 @@ export default function LeaderboardPage() {
                 </div>
               </div>
             )}
-            
+
             {/* 1st place */}
             {top3[0] && (
               <div className={`rounded-xl border ${getMedalStyle(1).border} ${getMedalStyle(1).bg} p-6 card-hover md:-mt-4 md:mb-[-1rem]`}>
@@ -436,8 +444,13 @@ export default function LeaderboardPage() {
                     ★
                   </div>
                   <span className="text-sm font-semibold text-[var(--muted-foreground)]">1st Place</span>
+                  {judgeScores[top3[0].id] != null && (
+                    <span className="ml-auto inline-flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] border border-[var(--warning)]/20">
+                      ★ {judgeScores[top3[0].id].toFixed(1)}
+                    </span>
+                  )}
                 </div>
-                <h3 
+                <h3
                   className="text-xl font-bold text-[var(--foreground)] truncate"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
@@ -445,6 +458,9 @@ export default function LeaderboardPage() {
                 </h3>
                 {top3[0].team_name && (
                   <p className="text-sm text-[var(--muted-foreground)] mt-1">{top3[0].team_name}</p>
+                )}
+                {top3[0].created_at && (
+                  <p className="text-xs text-[var(--muted-foreground)] mt-1">Submitted {formatRelativeDate(top3[0].created_at)}</p>
                 )}
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-4xl font-bold text-[var(--primary)]">{Math.round(top3[0].elo_rating)}</span>
@@ -455,7 +471,7 @@ export default function LeaderboardPage() {
                 </div>
               </div>
             )}
-            
+
             {/* 3rd place */}
             {top3[2] && (
               <div className={`rounded-xl border ${getMedalStyle(3).border} ${getMedalStyle(3).bg} p-5 card-hover`}>
@@ -464,8 +480,13 @@ export default function LeaderboardPage() {
                     3
                   </div>
                   <span className="text-sm font-semibold text-[var(--muted-foreground)]">3rd Place</span>
+                  {judgeScores[top3[2].id] != null && (
+                    <span className="ml-auto inline-flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] border border-[var(--warning)]/20">
+                      ★ {judgeScores[top3[2].id].toFixed(1)}
+                    </span>
+                  )}
                 </div>
-                <h3 
+                <h3
                   className="text-lg font-bold text-[var(--foreground)] truncate"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
@@ -473,6 +494,9 @@ export default function LeaderboardPage() {
                 </h3>
                 {top3[2].team_name && (
                   <p className="text-sm text-[var(--muted-foreground)] mt-1">{top3[2].team_name}</p>
+                )}
+                {top3[2].created_at && (
+                  <p className="text-xs text-[var(--muted-foreground)] mt-1">Submitted {formatRelativeDate(top3[2].created_at)}</p>
                 )}
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-[var(--primary)]">{Math.round(top3[2].elo_rating)}</span>
@@ -493,19 +517,21 @@ export default function LeaderboardPage() {
           {/* Header row */}
           <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-[var(--muted)] text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
             <div className="col-span-1">Rank</div>
-            <div className="col-span-7 md:col-span-6">Project</div>
+            <div className="col-span-7 md:col-span-5">Project</div>
             <div className="col-span-2 text-center hidden md:block">Rating</div>
-            <div className="col-span-3 md:col-span-4 text-right">Links</div>
+            <div className="col-span-4 md:col-span-4 text-right hidden md:block">Links</div>
           </div>
 
           {rest.map((project, idx) => {
             const rank = idx + 4;
             const style = getMedalStyle(rank);
+            const avgScore = judgeScores[project.id];
+            const isNew = newProjectIds.has(project.id);
 
             return (
               <div
                 key={project.id}
-                className={`grid grid-cols-12 gap-4 px-6 py-4 items-center border-b border-[var(--border)] last:border-0 transition-colors hover:bg-[var(--muted)]/50 ${style.bg}`}
+                className={`grid grid-cols-12 gap-4 px-6 py-4 items-center border-b border-[var(--border)] last:border-0 transition-colors hover:bg-[var(--muted)]/50 ${style.bg} ${isNew ? 'animate-row-shift' : ''}`}
               >
                 {/* Rank */}
                 <div className="col-span-1">
@@ -515,8 +541,8 @@ export default function LeaderboardPage() {
                 </div>
 
                 {/* Project Info */}
-                <div className="col-span-8 md:col-span-6 min-w-0">
-                  <div 
+                <div className="col-span-8 md:col-span-5 min-w-0">
+                  <div
                     className="font-semibold text-[var(--foreground)] text-base truncate"
                     style={{ fontFamily: 'var(--font-display)' }}
                   >
@@ -528,10 +554,20 @@ export default function LeaderboardPage() {
                         {project.team_name}
                       </span>
                     )}
+                    {avgScore != null && (
+                      <span className="inline-flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] border border-[var(--warning)]/20">
+                        ★ {avgScore.toFixed(1)}
+                      </span>
+                    )}
                     {project.tagline && (
                       <span className="text-xs text-[var(--muted-foreground)] truncate">{project.tagline}</span>
                     )}
                   </div>
+                  {project.created_at && (
+                    <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                      Submitted {formatRelativeDate(project.created_at)}
+                    </p>
+                  )}
                 </div>
 
                 {/* Elo Rating */}
@@ -543,17 +579,21 @@ export default function LeaderboardPage() {
                   </span>
                 </div>
 
-                {/* Mobile elo */}
-                <div className="md:hidden col-span-3 flex flex-col items-end">
+                {/* Mobile elo + links */}
+                <div className="md:hidden col-span-3 flex flex-col items-end gap-1">
                   <span className="text-lg font-bold text-[var(--primary)]">{Math.round(project.elo_rating)}</span>
-                  <span className="tooltip-wrapper">
-                    <span className="text-xs text-[var(--muted-foreground)]">Elo</span>
-                    <span className="tooltip-content">Elo rating — higher = more votes</span>
-                  </span>
+                  <div className="flex gap-1">
+                    {project.demo_url && (
+                      <a href={project.demo_url} target="_blank" rel="noopener noreferrer" className="px-2 py-0.5 rounded bg-[var(--primary)] text-white text-xs font-semibold">Demo</a>
+                    )}
+                    {project.github_url && (
+                      <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="px-2 py-0.5 rounded bg-[var(--foreground)] text-[var(--background)] text-xs font-semibold">GitHub</a>
+                    )}
+                  </div>
                 </div>
 
-                {/* Links */}
-                <div className="col-span-3 md:col-span-4 flex gap-2 justify-end">
+                {/* Desktop links */}
+                <div className="hidden md:flex col-span-4 gap-2 justify-end items-center">
                   {project.demo_url && (
                     <a
                       href={project.demo_url}
