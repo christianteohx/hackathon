@@ -7,6 +7,7 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/submit", label: "Submit" },
   { href: "/vote", label: "Vote" },
+  { href: "/judge", label: "Judges" },
   { href: "/leaderboard", label: "Leaderboard" },
 ];
 
