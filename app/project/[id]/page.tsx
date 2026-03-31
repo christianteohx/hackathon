@@ -17,6 +17,7 @@ type ProjectDetail = {
   elo_rating: number;
   join_code: string;
   created_at: string;
+  tags?: string[];
 };
 
 export default function ProjectPage() {
@@ -25,6 +26,7 @@ export default function ProjectPage() {
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -48,12 +50,20 @@ export default function ProjectPage() {
     fetchProject();
   }, [id]);
 
+  function showToast(message: string) {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  }
+
   function shareProject(name: string, url: string) {
     if (navigator.share) {
-      navigator.share({ title: name, url });
+      navigator.share({ title: name, url }).catch(() => {
+        navigator.clipboard.writeText(url);
+        showToast('Link copied to clipboard!');
+      });
     } else {
       navigator.clipboard.writeText(url);
-      alert('Link copied to clipboard!');
+      showToast('Link copied to clipboard!');
     }
   }
 
@@ -116,6 +126,26 @@ export default function ProjectPage() {
         )}
       </div>
 
+      {/* Tags */}
+      {project.tags && project.tags.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+          {project.tags.map((tag) => (
+            <span
+              key={tag}
+              style={{
+                fontSize: '0.75rem',
+                color: '#374151',
+                background: '#e5e7eb',
+                padding: '2px 8px',
+                borderRadius: '9999px'
+              }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Description */}
       <div style={{
         background: '#f9f9f9',
@@ -176,9 +206,33 @@ export default function ProjectPage() {
       {/* QR Code */}
       <ProjectQR projectId={project.id} projectName={project.name} />
 
+      {/* External QR Code for easy sharing */}
+      <div className="mt-6">
+        <p className="text-xs font-semibold text-[var(--muted-foreground)] mb-2">Scan to share</p>
+        <img
+          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/project/${project.id}`)}`}
+          alt="QR code for sharing this project"
+          width={200}
+          height={200}
+          className="rounded-xl"
+        />
+      </div>
+
       <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: '#9ca3af' }}>
         Join code: <code style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: '4px' }}>{project.join_code}</code>
       </p>
+
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--foreground)] text-[var(--background)] shadow-lg">
+            <svg className="w-4 h-4 text-[var(--success)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-sm font-medium">{toast}</span>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
