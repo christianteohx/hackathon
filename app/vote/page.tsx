@@ -36,6 +36,7 @@ export default function VotePage() {
   const [voteCount, setVoteCount] = useState(0);
   const [totalVotes, setTotalVotes] = useState<number | null>(null);
   const [votingDeadline, setVotingDeadline] = useState<Date | null>(null);
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
 
   useEffect(() => {
     setVoteCount(getSessionVotedPairIds().size);
@@ -77,8 +78,91 @@ export default function VotePage() {
     }
   }, [currentPair, router]);
 
+  // Session timeout warning — show "Still there?" after 10 minutes of inactivity
+  useEffect(() => {
+    const TIMEOUT_MS = 10 * 60 * 1000;
+    let warningTimer: ReturnType<typeof setTimeout>;
+    let dismissed = false;
+
+    const resetTimer = () => {
+      clearTimeout(warningTimer);
+      dismissed = false;
+      setShowTimeoutWarning(false);
+      if (currentPair) {
+        warningTimer = setTimeout(() => {
+          if (!dismissed) setShowTimeoutWarning(true);
+        }, TIMEOUT_MS);
+      }
+    };
+
+    const handleActivity = () => {
+      if (dismissed) {
+        resetTimer();
+      } else {
+        resetTimer();
+      }
+    };
+
+    // Start the timer on mount
+    warningTimer = setTimeout(() => {
+      if (!dismissed) setShowTimeoutWarning(true);
+    }, TIMEOUT_MS);
+
+    // Reset on user activity
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+    window.addEventListener("click", handleActivity);
+    window.addEventListener("scroll", handleActivity);
+
+    return () => {
+      clearTimeout(warningTimer);
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+      window.removeEventListener("click", handleActivity);
+      window.removeEventListener("scroll", handleActivity);
+    };
+  }, [currentPair]);
+
+  const dismissTimeoutWarning = () => {
+    setShowTimeoutWarning(false);
+  };
+
   if (!currentPair) {
-    return null;
+    return (
+      <AppShell title="🗳️ Voting" subtitle="">
+        <div className="rounded-2xl border border-[var(--border)] bg-white p-16 text-center animate-scale-in">
+          {/* Checkmark illustration */}
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[var(--success)]/10 flex items-center justify-center">
+            <svg className="w-12 h-12 text-[var(--success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2
+            className="text-2xl font-bold text-[var(--foreground)] mb-3"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            You&apos;ve seen all projects!
+          </h2>
+          <p className="text-[var(--muted-foreground)] mb-8 max-w-sm mx-auto">
+            You&apos;ve voted on every matchup. Come back later when more projects are submitted!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a
+              href="/leaderboard"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[var(--primary)] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+            >
+              View Leaderboard
+            </a>
+            <a
+              href="/"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-[var(--border)] text-[var(--foreground)] font-semibold text-sm hover:bg-[var(--muted)] transition-all"
+            >
+              Back to Home
+            </a>
+          </div>
+        </div>
+      </AppShell>
+    );
   }
 
   const leftProject = projects.find(
@@ -138,22 +222,25 @@ export default function VotePage() {
               Hide project and team names while voting to reduce bias. Names are revealed after you cast your vote.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={toggleBlindMode}
-            className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 ${
-              isBlindMode ? "bg-[var(--primary)]" : "bg-[var(--muted-foreground)]/30"
-            }`}
-            aria-pressed={isBlindMode}
-            aria-label={isBlindMode ? "Disable blind voting mode" : "Enable blind voting mode"}
-          >
-            <span className="sr-only">Toggle blind voting mode</span>
-            <span
-              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                isBlindMode ? "translate-x-5" : "translate-x-0"
+          <div className="tooltip-wrapper">
+            <button
+              type="button"
+              onClick={toggleBlindMode}
+              className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 ${
+                isBlindMode ? "bg-[var(--primary)]" : "bg-[var(--muted-foreground)]/30"
               }`}
-            />
-          </button>
+              aria-pressed={isBlindMode}
+              aria-label={isBlindMode ? "Disable blind voting mode" : "Enable blind voting mode"}
+            >
+              <span className="sr-only">Toggle blind voting mode</span>
+              <span
+                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                  isBlindMode ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+            <span className="tooltip-content">Toggle to hide/show project names while voting</span>
+          </div>
         </div>
         <div className="mt-3 flex items-center gap-2">
           <span
@@ -171,6 +258,30 @@ export default function VotePage() {
         </div>
       </div>
 
+      {/* Session Timeout Warning */}
+      {showTimeoutWarning && (
+        <div className="mb-6 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/5 p-4 flex items-center justify-between gap-4 animate-soft-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[var(--warning)]/10 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-[var(--warning)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[var(--foreground)]">Still there?</p>
+              <p className="text-xs text-[var(--muted-foreground)]">Your session is still active. Keep voting!</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={dismissTimeoutWarning}
+            className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-white border border-[var(--border)] text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
+          >
+            Got it
+          </button>
+        </div>
+      )}
+
       {/* Vote Duel */}
       <VoteDuel
         left={leftProject}
@@ -184,7 +295,10 @@ export default function VotePage() {
       <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-[var(--muted-foreground)]">
         <p>
           You've voted on{' '}
-          <span className="font-semibold text-[var(--foreground)]">{voteCount}</span>
+          <span className="tooltip-wrapper">
+            <span className="font-semibold text-[var(--foreground)]">{voteCount}</span>
+            <span className="tooltip-content">Number of matchups you&apos;ve voted on in this browser session</span>
+          </span>
           {' '}matchup{voteCount !== 1 ? 's' : ''} this session
         </p>
         {totalVotes !== null && (
