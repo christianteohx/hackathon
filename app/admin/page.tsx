@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { AppShell } from '@/components/AppShell';
 
@@ -14,12 +13,16 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [topProjects, setTopProjects] = useState<{ name: string; elo_rating: number; team_name: string | null }[]>([]);
+  const [activeHackathonId, setActiveHackathonId] = useState<string | null>(null);
+  const [announcementDraft, setAnnouncementDraft] = useState('');
+  const [savingAnnouncement, setSavingAnnouncement] = useState(false);
+  const [announcementMessage, setAnnouncementMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
 
-      const [projectsRes, votesRes, profilesRes, leaderboardRes] = await Promise.all([
+      const [projectsRes, votesRes, profilesRes, leaderboardRes, activeHackathonRes] = await Promise.all([
         supabase.from('projects').select('id', { count: 'exact' }),
         supabase.from('votes').select('id', { count: 'exact' }),
         supabase.from('profiles').select('id', { count: 'exact' }),
@@ -28,12 +31,20 @@ export default function AdminPage() {
           .select('name, elo_rating, team_name')
           .order('elo_rating', { ascending: false })
           .limit(5),
+        supabase
+          .from('hackathons')
+          .select('id, announcements')
+          .eq('is_active', true)
+          .order('start_date', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
       ]);
 
       if (projectsRes.error) console.error('projects error:', projectsRes.error);
       if (votesRes.error) console.error('votes error:', votesRes.error);
       if (profilesRes.error) console.error('profiles error:', profilesRes.error);
       if (leaderboardRes.error) console.error('leaderboard error:', leaderboardRes.error);
+      if (activeHackathonRes.error) console.error('active hackathon error:', activeHackathonRes.error);
 
       setStats({
         totalProjects: projectsRes.count || 0,
@@ -43,6 +54,12 @@ export default function AdminPage() {
 
       if (leaderboardRes.data) {
         setTopProjects(leaderboardRes.data);
+      }
+
+      const activeHackathon = activeHackathonRes.data as { id: string; announcements: string | null } | null;
+      if (activeHackathon) {
+        setActiveHackathonId(activeHackathon.id);
+        setAnnouncementDraft(activeHackathon.announcements || '');
       }
 
       const hasError = projectsRes.error || votesRes.error || profilesRes.error;
@@ -55,6 +72,26 @@ export default function AdminPage() {
 
     fetchStats();
   }, []);
+
+  const saveAnnouncement = async () => {
+    if (!activeHackathonId || savingAnnouncement) return;
+
+    setSavingAnnouncement(true);
+    setAnnouncementMessage(null);
+
+    const { error: updateError } = await (supabase as any)
+      .from('hackathons')
+      .update({ announcements: announcementDraft.trim() || null })
+      .eq('id', activeHackathonId);
+
+    if (updateError) {
+      setAnnouncementMessage('Failed to save announcement. Please try again.');
+    } else {
+      setAnnouncementMessage('Announcement saved.');
+    }
+
+    setSavingAnnouncement(false);
+  };
 
   const statCards = [
     { label: 'Total Projects', value: stats.totalProjects, icon: '📁' },
@@ -112,6 +149,44 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Announcement */}
+      {!loading && (
+        <div className="mb-10 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">📣 Home Announcement Banner</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            This message appears as a dismissible banner at the top of the home page.
+          </p>
+
+          {activeHackathonId ? (
+            <>
+              <textarea
+                value={announcementDraft}
+                onChange={(e) => setAnnouncementDraft(e.target.value)}
+                placeholder="Type an announcement for participants..."
+                className="w-full min-h-28 rounded-lg border border-gray-300 p-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={saveAnnouncement}
+                  disabled={savingAnnouncement}
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {savingAnnouncement ? 'Saving...' : 'Save Announcement'}
+                </button>
+                {announcementMessage && (
+                  <p className="text-sm text-gray-600">{announcementMessage}</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              No active hackathon found. Activate a hackathon to publish an announcement.
+            </p>
+          )}
         </div>
       )}
 

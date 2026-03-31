@@ -14,12 +14,15 @@ interface Hackathon {
   end_date: string;
   is_active: boolean;
   voting_deadline: string | null;
+  announcements: string | null;
 }
 
 export default function HomePage() {
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [loading, setLoading] = useState(true);
   const [votingDeadline, setVotingDeadline] = useState<Date | null>(null);
+  const [announcement, setAnnouncement] = useState<string | null>(null);
+  const [announcementDismissed, setAnnouncementDismissed] = useState(false);
 
   useEffect(() => {
     const fetchHackathons = async () => {
@@ -31,8 +34,19 @@ export default function HomePage() {
 
       if (!error && data) {
         setHackathons(data as Hackathon[]);
-        if (data.length > 0 && (data[0] as Hackathon).voting_deadline) {
-          setVotingDeadline(new Date((data[0] as Hackathon).voting_deadline!));
+        if (data.length > 0) {
+          const activeHackathon = data[0] as Hackathon;
+          if (activeHackathon.voting_deadline) {
+            setVotingDeadline(new Date(activeHackathon.voting_deadline));
+          }
+          if (activeHackathon.announcements) {
+            setAnnouncement(activeHackathon.announcements);
+            // Check if previously dismissed
+            try {
+              const dismissed = localStorage.getItem(`hackathon_announcement_dismissed_${activeHackathon.id}_${activeHackathon.announcements}`);
+              if (dismissed) setAnnouncementDismissed(true);
+            } catch {}
+          }
         }
       }
       setLoading(false);
@@ -40,6 +54,16 @@ export default function HomePage() {
 
     fetchHackathons();
   }, []);
+
+  const dismissAnnouncement = () => {
+    setAnnouncementDismissed(true);
+    // Remember dismissal for this hackathon
+    if (hackathons.length > 0 && announcement) {
+      try {
+        localStorage.setItem(`hackathon_announcement_dismissed_${hackathons[0].id}_${announcement}`, 'true');
+      } catch {}
+    }
+  };
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -57,6 +81,35 @@ export default function HomePage() {
         {/* Content */}
         <div className="relative max-w-5xl mx-auto px-6 py-24 md:py-32">
           <div className="text-center">
+            {/* Announcement Banner */}
+            {announcement && !announcementDismissed && (
+              <div className="mb-6 animate-fade-in-up">
+                <div className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 p-4 flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-full bg-[var(--primary)]/10 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-[var(--foreground)]">Announcement</p>
+                      <p className="text-sm text-[var(--muted-foreground)] mt-0.5">{announcement}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={dismissAnnouncement}
+                    className="flex-shrink-0 w-7 h-7 rounded-full bg-[var(--muted)] hover:bg-[var(--border)] flex items-center justify-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                    aria-label="Dismiss announcement"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+            
             {/* Badge */}
             <div className="mb-8 animate-fade-in-up">
               <CountdownTimer deadline={votingDeadline} label="Voting ends" />
