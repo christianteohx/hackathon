@@ -58,6 +58,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authPromptAction, setAuthPromptAction] = useState("continue");
   const [isBlindMode, setIsBlindMode] = useState(false);
+  // Session-level localStorage tracking of voted pair IDs (covers both DB failures and repeat votes)
+  const [localVotedPairIds, setLocalVotedPairIds] = useState<Set<string>>(new Set());
+
+  // Load voted pairs from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("hackathon_voted_pairs");
+      if (stored) {
+        setLocalVotedPairIds(new Set(JSON.parse(stored) as string[]));
+      }
+    } catch {
+      // ignore localStorage errors
+    }
+  }, []);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -142,9 +156,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [voteHistory]
   );
 
+  // Combine Supabase vote history with session localStorage pairs
+  const allVotedPairIds = useMemo(() => {
+    return new Set([...votedPairIds, ...localVotedPairIds]);
+  }, [votedPairIds, localVotedPairIds]);
+
   const currentPair = useMemo(() => {
-    return votePairs.find((pair) => !votedPairIds.has(pair.id)) ?? null;
-  }, [votePairs, votedPairIds]);
+    return votePairs.find((pair) => !allVotedPairIds.has(pair.id)) ?? null;
+  }, [votePairs, allVotedPairIds]);
 
   const value: AppState = {
     isAuthed,
@@ -381,6 +400,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             at: newVote.created_at || new Date().toISOString(),
           },
         ]);
+
+        // Also persist to localStorage for session-level deduplication
+        setLocalVotedPairIds((prev) => {
+          const next = new Set(prev);
+          next.add(currentPair.id);
+          try {
+            localStorage.setItem("hackathon_voted_pairs", JSON.stringify([...next]));
+          } catch {
+            // ignore
+          }
+          return next;
+        });
       }
     },
     resetVoting: async () => {
@@ -389,6 +420,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return;
       }
       setVoteHistory([]);
+      setLocalVotedPairIds(new Set());
+      try {
+        localStorage.removeItem("hackathon_voted_pairs");
+      } catch {
+        // ignore
+      }
     },
   };
 
