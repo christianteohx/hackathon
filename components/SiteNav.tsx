@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -46,13 +46,22 @@ export function SiteNav() {
     }
   };
 
-  const closeMenu = () => {
-    setMobileOpen(false);
-  };
+  const closeMenu = useCallback(() => {
+    setMobileOpen((prev) => (prev ? false : prev));
+  }, []);
 
-  const openMenu = () => {
+  const openMenu = useCallback(() => {
     setMobileOpen(true);
-  };
+  }, []);
+
+  const handleCloseMenuPress = useCallback(
+    (e: { preventDefault: () => void; stopPropagation: () => void }) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu();
+    },
+    [closeMenu],
+  );
 
   // Close on escape key
   useEffect(() => {
@@ -63,7 +72,12 @@ export function SiteNav() {
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [mobileOpen]);
+  }, [mobileOpen, closeMenu]);
+
+  // Keep mobile drawer closed across route transitions
+  useEffect(() => {
+    closeMenu();
+  }, [pathname, closeMenu]);
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -113,7 +127,11 @@ export function SiteNav() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden">
+      <nav
+        className={`sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden ${
+          mobileOpen ? "pointer-events-none md:pointer-events-auto" : ""
+        }`}
+      >
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex items-center justify-between h-14 gap-3">
             {/* Logo */}
@@ -152,6 +170,7 @@ export function SiteNav() {
             <button
               type="button"
               onClick={openMenu}
+              disabled={mobileOpen}
               className="md:hidden p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
               aria-label="Open menu"
               aria-expanded={mobileOpen}
@@ -169,7 +188,8 @@ export function SiteNav() {
         <div
           ref={backdropRef}
           className="fixed inset-0 z-[80] bg-black/50"
-          onClick={closeMenu}
+          onPointerDown={handleCloseMenuPress}
+          onClick={handleCloseMenuPress}
           aria-hidden="true"
         />
       )}
@@ -192,7 +212,8 @@ export function SiteNav() {
             </span>
             <button
               type="button"
-              onClick={() => { alert("X clicked"); closeMenu(); }}
+              onPointerDown={handleCloseMenuPress}
+              onClick={handleCloseMenuPress}
               className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
               aria-label="Close menu"
             >
@@ -210,7 +231,8 @@ export function SiteNav() {
                 <Link
                   key={href}
                   href={href}
-                  onClick={closeMenu}
+                  onPointerDown={handleCloseMenuPress}
+                  onClick={handleCloseMenuPress}
                   className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200
                     ${isActive
                       ? "bg-[var(--primary)] text-white shadow-sm"
