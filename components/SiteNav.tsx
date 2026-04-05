@@ -191,6 +191,7 @@ export function SiteNav() {
           onPointerDown={handleCloseMenuPress}
           onClick={handleCloseMenuPress}
           aria-hidden="true"
+          style={{ display: "block" }}
         />
       )}
 
@@ -200,9 +201,8 @@ export function SiteNav() {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={`fixed top-0 right-0 z-[90] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl transition-transform duration-300 ease-out md:hidden ${
-          mobileOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className="fixed top-0 right-0 z-[90] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl md:hidden"
+        style={{ display: mobileOpen ? "block" : "none" }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
