@@ -5,10 +5,17 @@ import type { Database } from "@/types/database";
 
 export async function GET() {
   try {
-    const supabase = createClient<Database>(
-      getSupabaseUrl(),
-      getSupabaseAnonKey()
-    );
+    const supabaseUrl = getSupabaseUrl();
+    const supabaseKey = getSupabaseAnonKey();
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { status: "error", error: "Supabase environment variables not configured" },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient<Database>(supabaseUrl, supabaseKey);
     const { data, error } = await supabase.rpc("ping");
 
     if (error) {

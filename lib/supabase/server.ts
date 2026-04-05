@@ -5,11 +5,21 @@ import type { Database } from "@/types/database";
 import { getSupabaseAnonKey, getSupabaseUrl } from "./config";
 
 export function createServerSupabaseClient(): SupabaseClient<Database> {
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
+
+  if (!url || !anonKey) {
+    throw new Error(
+      "Supabase environment variables are not configured. " +
+        "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
+  }
+
   const cookieStore = cookies();
 
   return createServerClient<Database>(
-    getSupabaseUrl(),
-    getSupabaseAnonKey(),
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {
