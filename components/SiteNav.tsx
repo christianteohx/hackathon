@@ -228,8 +228,7 @@ export function SiteNav() {
                 <Link
                   key={href}
                   href={href}
-                  onPointerDown={handleCloseMenuPress}
-                  onClick={handleCloseMenuPress}
+                  onClick={closeMenu}
                   className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200
                     ${isActive
                       ? "bg-[var(--primary)] text-white shadow-sm"
