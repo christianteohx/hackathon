@@ -17,6 +17,8 @@ export default function AdminPage() {
     activeHackers: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [topProjects, setTopProjects] = useState<{ name: string; elo_rating: number; team_name: string | null }[]>([]);
   const [activeHackathonId, setActiveHackathonId] = useState<string | null>(null);
@@ -27,8 +29,16 @@ export default function AdminPage() {
   const [hackers, setHackers] = useState<HackerRow[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchStats = async () => {
-      setLoading(true);
+      if (!cancelled) {
+        if (loading) {
+          setLoading(true);
+        } else {
+          setRefreshing(true);
+        }
+      }
 
       const [projectsRes, votesRes, profilesRes, leaderboardRes, activeHackathonRes, hackersRes, projectOwnersRes] = await Promise.all([
         supabase.from('projects').select('id', { count: 'exact' }),
@@ -102,10 +112,18 @@ export default function AdminPage() {
         setError('Some data could not be loaded. Showing partial results.');
       }
 
+      if (cancelled) return;
+      setLastUpdated(new Date());
       setLoading(false);
+      setRefreshing(false);
     };
 
     fetchStats();
+    const poll = setInterval(fetchStats, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+    };
   }, []);
 
   const saveAnnouncement = async () => {
@@ -136,10 +154,6 @@ export default function AdminPage() {
 
   return (
     <AppShell title="🏁 Organizer Dashboard" subtitle="Overview of the current hackathon event">
-      {loading && (
-        <p className="text-center text-gray-500 py-12">Loading stats...</p>
-      )}
-
       {error && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 text-sm mb-6">
           ⚠️ {error}
@@ -170,20 +184,52 @@ export default function AdminPage() {
       {activeTab === 'overview' ? (
         <>
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-        {statCards.map(({ label, value, icon }) => (
-          <div key={label} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm text-center">
-            <div className="text-3xl mb-3">{icon}</div>
-            <div className="text-4xl font-bold text-gray-900 leading-none">
-              {loading ? '—' : value.toLocaleString()}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        {loading ? (
+          <>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm text-center">
+                <div className="h-8 w-8 rounded mx-auto mb-3 skeleton" />
+                <div className="h-10 w-20 rounded skeleton mx-auto mb-2" />
+                <div className="h-4 w-24 rounded skeleton mx-auto" />
+              </div>
+            ))}
+          </>
+        ) : (
+          statCards.map(({ label, value, icon }) => (
+            <div key={label} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm text-center">
+              <div className="text-3xl mb-3">{icon}</div>
+              <div className="text-4xl font-bold text-gray-900 leading-none">
+                {value.toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-500 mt-2">{label}</div>
             </div>
-            <div className="text-sm text-gray-500 mt-2">{label}</div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
+      {/* Last updated */}
+      {!loading && lastUpdated && (
+        <p className={`mb-10 text-xs text-gray-400 text-center transition-opacity ${refreshing ? 'opacity-50' : 'opacity-100'}`}>
+          {refreshing && (
+            <span className="inline-block w-3 h-3 rounded-full border-2 border-gray-400 border-t-transparent animate-spin mr-1 align-middle" />
+          )}
+          Last updated {lastUpdated.toLocaleTimeString()} · Auto-refreshes every 30s
+        </p>
+      )}
+
       {/* Top Projects */}
-      {!loading && topProjects.length > 0 && (
+      {loading ? (
+        <div className="mb-10 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-gray-100 last:border-0">
+              <div className="w-8 h-8 rounded-full skeleton" />
+              <div className="flex-1 h-5 w-48 rounded skeleton" />
+              <div className="h-5 w-16 rounded skeleton" />
+            </div>
+          ))}
+        </div>
+      ) : topProjects.length > 0 ? (
         <div className="mb-10">
           <h2 className="text-lg font-bold text-gray-900 mb-4">🏆 Top Projects</h2>
           <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -207,6 +253,10 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+        </div>
+      ) : (
+        <div className="mb-10 rounded-xl border border-gray-200 overflow-hidden shadow-sm bg-white p-8 text-center">
+          <p className="text-gray-500 text-sm">No projects have been submitted yet.</p>
         </div>
       )}
 

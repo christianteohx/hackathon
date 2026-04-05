@@ -137,7 +137,8 @@ export default function LeaderboardPage() {
         };
       });
 
-      parsed.sort((a: any, b: any) => (b.rankingScore ?? 0) - (a.rankingScore ?? 0));
+      // Sort by actual Elo rating, not combined score
+      parsed.sort((a: any, b: any) => (b.elo_rating ?? 1200) - (a.elo_rating ?? 1200));
       setProjects(parsed as Project[]);
       setLoading(false);
     };
@@ -270,7 +271,7 @@ export default function LeaderboardPage() {
   return (
     <AppShell
       title="🏆 Leaderboard"
-      subtitle={activeTab === 'elo' ? 'Ranked by combined score (avg judge score + vote count)' : 'Ranked by votes in the last 24 hours'}
+      subtitle={activeTab === 'elo' ? 'Ranked by true Elo rating (updated after every vote)' : 'Ranked by votes in the last 24 hours'}
     >
       <div className="leaderboard-print-root">
       {/* Tab Switcher */}
