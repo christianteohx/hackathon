@@ -218,8 +218,7 @@ export default function LeaderboardPage() {
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
-          (p.team_name && p.team_name.toLowerCase().includes(q)) ||
-          (p.tagline && p.tagline.toLowerCase().includes(q))
+          (p.team_name && p.team_name.toLowerCase().includes(q))
       );
     }
 
@@ -310,7 +309,7 @@ export default function LeaderboardPage() {
             </svg>
             <input
               type="text"
-              placeholder="Search projects by name, team, or tagline..."
+              placeholder="Search projects by name or team name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-white text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
