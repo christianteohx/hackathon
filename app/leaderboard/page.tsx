@@ -12,10 +12,14 @@ type Project = {
   team_name: string | null;
   demo_url: string | null;
   github_url: string | null;
-  elo_rating: number;
+  elo_rating: number;  // actual Elo from DB (starts 1200, updated via votes)
   join_code: string;
   tags?: string[];
   created_at?: string;
+  // Ranking helpers (not persisted — computed client-side)
+  rankingScore?: number;  // judge avg + vote count, used only for display order
+  voteCount?: number;
+  judgeAvg?: number;
 };
 
 function formatRelativeDate(dateString?: string): string {
@@ -121,15 +125,19 @@ export default function LeaderboardPage() {
         const id = p.id as string;
         const avgJudge = Number.isFinite(judgeAverages[id]) ? judgeAverages[id] : 0;
         const voteCount = voteCounts[id] || 0;
-        const combinedScore = avgJudge + voteCount;
+        const rankingScore = avgJudge + voteCount;
         return {
           ...p,
           tags: p.tags ? (p.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean) : [],
-          elo_rating: Number.isFinite(combinedScore) ? combinedScore : 0,
+          rankingScore: Number.isFinite(rankingScore) ? rankingScore : 0,
+          voteCount,
+          judgeAvg: avgJudge,
+          // Keep actual Elo intact
+          elo_rating: typeof p.elo_rating === 'number' ? p.elo_rating : 1200,
         };
       });
 
-      parsed.sort((a: any, b: any) => (b.elo_rating ?? 0) - (a.elo_rating ?? 0));
+      parsed.sort((a: any, b: any) => (b.rankingScore ?? 0) - (a.rankingScore ?? 0));
       setProjects(parsed as Project[]);
       setLoading(false);
     };

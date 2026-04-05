@@ -19,11 +19,40 @@ type ProjectDetail = {
   tags?: string[];
 };
 
+type SimilarProject = {
+  id: string;
+  name: string;
+  tagline: string;
+  tags: string[];
+  elo_rating: number;
+};
+
+function normalizeProject(raw: any): ProjectDetail {
+  return {
+    id: raw.id,
+    name: raw.name,
+    tagline: raw.tagline || '',
+    description: raw.description || '',
+    team_name: raw.team_name ?? null,
+    demo_url: raw.demo_url ?? raw.demoUrl ?? null,
+    github_url: raw.github_url ?? raw.githubUrl ?? null,
+    elo_rating: Number(raw.elo_rating ?? raw.eloRating ?? 0),
+    join_code: raw.join_code ?? raw.joinCode ?? '',
+    created_at: raw.created_at ?? raw.createdAt ?? '',
+    tags: Array.isArray(raw.tags)
+      ? raw.tags
+      : typeof raw.tags === 'string'
+      ? raw.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+      : [],
+  };
+}
+
 export default function ProjectDetailClient({ id }: { id: string }) {
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [similarProjects, setSimilarProjects] = useState<SimilarProject[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -36,7 +65,7 @@ export default function ProjectDetailClient({ id }: { id: string }) {
           throw new Error('Project not found');
         }
         const data = await res.json();
-        setProject(data);
+        setProject(normalizeProject(data));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load project');
       } finally {
@@ -52,17 +81,33 @@ export default function ProjectDetailClient({ id }: { id: string }) {
     setTimeout(() => setToast(null), 3000);
   }
 
-  function shareProject(name: string, url: string) {
-    if (navigator.share) {
-      navigator.share({ title: name, url }).catch(() => {
-        navigator.clipboard.writeText(url);
-        showToast('Link copied to clipboard!');
-      });
-    } else {
-      navigator.clipboard.writeText(url);
-      showToast('Link copied to clipboard!');
-    }
+  async function copyProjectLink(url: string) {
+    await navigator.clipboard.writeText(url);
+    showToast('Link copied to clipboard!');
   }
+
+  function shareToTwitter(name: string, url: string) {
+    const text = encodeURIComponent(`Check out this hackathon project: ${name}`);
+    const shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`;
+    window.open(shareUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  useEffect(() => {
+    if (!project?.id) return;
+
+    const fetchSimilarProjects = async () => {
+      try {
+        const res = await fetch(`/api/projects/${project.id}/similar`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setSimilarProjects(Array.isArray(data) ? data : []);
+      } catch {
+        setSimilarProjects([]);
+      }
+    };
+
+    fetchSimilarProjects();
+  }, [project?.id]);
 
   if (loading) {
     return (
@@ -168,7 +213,7 @@ export default function ProjectDetailClient({ id }: { id: string }) {
               background: '#3b82f6', color: 'white',
               textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500'
             }}>
-            🚀 Live Demo
+            🚀 View Live
           </a>
         )}
         {project.github_url && (
@@ -182,13 +227,22 @@ export default function ProjectDetailClient({ id }: { id: string }) {
           </a>
         )}
         <button
-          onClick={() => shareProject(project.name, window.location.href)}
+          onClick={() => copyProjectLink(window.location.href)}
           style={{
             padding: '10px 18px', borderRadius: '8px',
             border: '1px solid #d1d5db', background: '#fff',
             cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500'
           }}>
-          🔗 Share
+          📋 Copy Link
+        </button>
+        <button
+          onClick={() => shareToTwitter(project.name, window.location.href)}
+          style={{
+            padding: '10px 18px', borderRadius: '8px',
+            border: '1px solid #d1d5db', background: '#fff',
+            cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500'
+          }}>
+          ✖️ Share on X
         </button>
         <Link href="/vote" style={{
           padding: '10px 18px', borderRadius: '8px',
@@ -214,6 +268,41 @@ export default function ProjectDetailClient({ id }: { id: string }) {
           className="rounded-xl"
         />
       </div>
+
+      {/* Similar projects */}
+      {similarProjects.length > 0 && (
+        <div style={{ marginTop: '2rem', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', color: '#374151' }}>
+            Similar Projects
+          </h3>
+          <div style={{ display: 'grid', gap: '0.75rem' }}>
+            {similarProjects.map((similar) => (
+              <Link
+                key={similar.id}
+                href={`/project/${similar.id}`}
+                style={{
+                  display: 'block',
+                  background: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '10px',
+                  padding: '0.9rem 1rem',
+                  textDecoration: 'none',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+                  <div>
+                    <p style={{ fontWeight: 600, color: '#111827', marginBottom: '0.2rem' }}>{similar.name}</p>
+                    <p style={{ color: '#6b7280', fontSize: '0.85rem' }}>{similar.tagline || 'No tagline provided'}</p>
+                  </div>
+                  <span style={{ color: '#6b7280', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                    🏆 {Math.round(similar.elo_rating)}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: '#9ca3af' }}>
         Join code: <code style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: '4px' }}>{project.join_code}</code>
