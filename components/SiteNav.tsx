@@ -145,12 +145,13 @@ export function SiteNav() {
   // Mobile overlay (backdrop + slide-in menu) — rendered via portal to document.body
   const mobileOverlay = mounted && createPortal(
     <div
-      aria-hidden={!mobileOpen}
+      aria-hidden="true"
       style={{
         position: "fixed",
         inset: 0,
         zIndex: "var(--z-mobile-overlay)",
-        pointerEvents: mobileOpen ? "auto" : "none",
+        pointerEvents: "none",
+        display: mobileOpen ? "block" : "none",
       }}
     >
       {/* Backdrop */}
@@ -178,7 +179,7 @@ export function SiteNav() {
           borderLeft: "1px solid var(--border)",
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
           pointerEvents: "auto",
-          display: mobileOpen ? "flex" : "none",
+          display: "flex",
           flexDirection: "column",
         }}
       >
