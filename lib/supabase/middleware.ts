@@ -8,9 +8,16 @@ export async function updateSession(request: NextRequest) {
     request
   });
 
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseKey = getSupabaseAnonKey();
+
+  if (!supabaseUrl || !supabaseKey) {
+    return response;
+  }
+
   const supabase = createServerClient<Database>(
-    getSupabaseUrl(),
-    getSupabaseAnonKey(),
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {

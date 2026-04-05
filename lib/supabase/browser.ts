@@ -7,10 +7,12 @@ let browserClient: SupabaseClient<Database> | undefined;
 
 export function createBrowserSupabaseClient() {
   if (!browserClient) {
-    browserClient = createBrowserClient<Database>(
-      getSupabaseUrl(),
-      getSupabaseAnonKey()
-    );
+    const supabaseUrl = getSupabaseUrl();
+    const supabaseKey = getSupabaseAnonKey();
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase environment variables are not configured.");
+    }
+    browserClient = createBrowserClient<Database>(supabaseUrl, supabaseKey);
   }
 
   return browserClient;
