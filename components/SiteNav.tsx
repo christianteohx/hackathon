@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 const navLinks = [
@@ -83,7 +83,7 @@ export function SiteNav() {
   const navBar = (
     <nav
       className="fixed top-0 inset-x-0 bg-[var(--background)] border-b border-[var(--border)] print:hidden"
-      style={{ height: "var(--nav-height, 3.5rem)" }}
+      style={{ height: "var(--nav-height, 3.5rem)", zIndex: 50 }}
     >
       <div className="max-w-5xl mx-auto px-6 h-full">
         <div className="flex items-center justify-between h-full gap-3">
@@ -145,16 +145,17 @@ export function SiteNav() {
   // Mobile overlay (backdrop + slide-in menu) — rendered via portal to document.body
   const mobileOverlay = mounted && createPortal(
     <div
-      aria-hidden="true"
+      aria-hidden={!mobileOpen}
       style={{
         position: "fixed",
-        top: "3.5rem",
-        right: 0,
-        bottom: 0,
-        left: 0,
-        zIndex: "var(--z-mobile-overlay)",
-        pointerEvents: "none",
-        display: mobileOpen ? "block" : "none",
+        inset: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 200,
+        pointerEvents: mobileOpen ? "auto" : "none",
+        opacity: mobileOpen ? 1 : 0,
+        visibility: mobileOpen ? "visible" : "hidden",
+        transition: "opacity 0.2s ease",
       }}
     >
       {/* Backdrop */}
@@ -174,16 +175,19 @@ export function SiteNav() {
         aria-label="Navigation menu"
         style={{
           position: "fixed",
-          top: "3.5rem",
+          top: 0,
           right: 0,
-          bottom: 0,
-          width: "18rem",
+          height: "100vh",
+          width: "min(18rem, 85vw)",
           backgroundColor: "var(--background)",
           borderLeft: "1px solid var(--border)",
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+          zIndex: 201,
           pointerEvents: "auto",
           display: "flex",
           flexDirection: "column",
+          transform: mobileOpen ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 0.2s ease",
         }}
       >
         {/* Header */}
