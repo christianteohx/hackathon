@@ -284,8 +284,25 @@ button, .btn {
   animation: slideInRight 300ms ease-out forwards;
 }
 
+.mobile-nav-exit {
+  animation: slideOutRight 300ms ease-in forwards;
+}
+
 .mobile-backdrop-enter {
   animation: fadeIn 200ms ease-out forwards;
+}
+
+.mobile-backdrop-exit {
+  animation: fadeOut 200ms ease-in forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 /* Tooltip */

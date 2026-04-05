@@ -124,13 +124,16 @@ export function SiteNav() {
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 mobile-backdrop-enter md:hidden"
-          onClick={() => setMobileOpen(false)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setMobileOpen(false);
+          }}
         />
       )}
 
       {/* Mobile Slide-in Menu */}
       <div
-        className={`fixed top-0 right-0 z-50 h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl mobile-nav-enter md:hidden`}
+        className={`fixed top-0 right-0 z-[60] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl mobile-nav-enter md:hidden`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -140,8 +143,11 @@ export function SiteNav() {
             </span>
             <button
               type="button"
-              onClick={() => setMobileOpen(false)}
-              className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMobileOpen(false);
+              }}
+              className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors cursor-pointer"
               aria-label="Close menu"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,8 +164,11 @@ export function SiteNav() {
                 <Link
                   key={href}
                   href={href}
-                  onClick={() => setMobileOpen(false)}
-                  className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMobileOpen(false);
+                  }}
+                  className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 cursor-pointer
                     ${isActive
                       ? "bg-[var(--primary)] text-white shadow-sm"
                       : "text-[var(--foreground)] hover:bg-[var(--muted)]"
