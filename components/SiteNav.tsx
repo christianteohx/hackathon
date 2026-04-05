@@ -123,7 +123,7 @@ export function SiteNav() {
           <button
             type="button"
             onClick={toggleMenu}
-            className="md:hidden p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
+            className="md:hidden ml-auto p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
           >
@@ -148,7 +148,10 @@ export function SiteNav() {
       aria-hidden="true"
       style={{
         position: "fixed",
-        inset: 0,
+        top: "3.5rem",
+        right: 0,
+        bottom: 0,
+        left: 0,
         zIndex: "var(--z-mobile-overlay)",
         pointerEvents: "none",
         display: mobileOpen ? "block" : "none",
@@ -170,10 +173,10 @@ export function SiteNav() {
         aria-modal="true"
         aria-label="Navigation menu"
         style={{
-          position: "absolute",
-          top: 0,
+          position: "fixed",
+          top: "3.5rem",
           right: 0,
-          height: "100%",
+          bottom: 0,
           width: "18rem",
           backgroundColor: "var(--background)",
           borderLeft: "1px solid var(--border)",
