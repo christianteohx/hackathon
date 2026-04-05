@@ -9,41 +9,6 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { useAppState } from "@/lib/app-state";
 import { supabase } from "@/lib/supabase";
 
-const SESSION_VOTES_LIMIT = 3;
-
-function getSessionVotedPairIds(): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const stored = localStorage.getItem("hackathon_voted_pairs");
-    return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
-  } catch {
-    return new Set();
-  }
-}
-
-function getSessionVotesRemaining(): number {
-  if (typeof window === "undefined") return SESSION_VOTES_LIMIT;
-  try {
-    const stored = localStorage.getItem("hackathon_session_votes_remaining");
-    if (stored !== null) {
-      const parsed = parseInt(stored, 10);
-      if (!isNaN(parsed) && parsed >= 0) return parsed;
-    }
-  } catch {
-    // ignore
-  }
-  return SESSION_VOTES_LIMIT;
-}
-
-function setSessionVotesRemaining(remaining: number) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem("hackathon_session_votes_remaining", String(remaining));
-  } catch {
-    // ignore
-  }
-}
-
 export default function VotePage() {
   const {
     currentPair,
@@ -54,19 +19,18 @@ export default function VotePage() {
     requireAuth,
     isBlindMode,
     toggleBlindMode,
+    isAnonymousMode,
+    toggleAnonymousMode,
   } = useAppState();
 
   const router = useRouter();
-  const [voteCount, setVoteCount] = useState(0);
-  const [votesRemaining, setVotesRemaining] = useState(SESSION_VOTES_LIMIT);
   const [totalVotes, setTotalVotes] = useState<number | null>(null);
   const [votingDeadline, setVotingDeadline] = useState<Date | null>(null);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+  const MAX_VOTES_PER_SESSION = 3;
+  const votesUsed = voteHistory.length;
+  const votesRemaining = Math.max(0, MAX_VOTES_PER_SESSION - votesUsed);
 
-  useEffect(() => {
-    setVoteCount(getSessionVotedPairIds().size);
-    setVotesRemaining(getSessionVotesRemaining());
-  }, []);
 
   // Fetch total global vote count from Supabase
   useEffect(() => {
@@ -92,17 +56,27 @@ export default function VotePage() {
         .limit(1)
         .single();
       if (!error && data?.voting_deadline) {
-        setVotingDeadline(new Date(data.voting_deadline));
+        const deadline = new Date(data.voting_deadline);
+        setVotingDeadline(deadline);
+        if (Date.now() >= deadline.getTime()) {
+          router.replace('/results');
+        }
       }
     };
     fetchVotingDeadline();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
-    if (!currentPair) {
+    if (votingDeadline && Date.now() >= votingDeadline.getTime()) {
+      router.replace('/results');
+    }
+  }, [votingDeadline, router]);
+
+  useEffect(() => {
+    if (votesRemaining <= 0 || !currentPair) {
       router.replace("/done");
     }
-  }, [currentPair, router]);
+  }, [currentPair, votesRemaining, router]);
 
   // Session timeout warning — show "Still there?" after 10 minutes of inactivity
   useEffect(() => {
@@ -153,46 +127,7 @@ export default function VotePage() {
     setShowTimeoutWarning(false);
   };
 
-  // Out of session votes — show encouraging empty state
-  if (votesRemaining <= 0) {
-    return (
-      <AppShell title="🗳️ Voting" subtitle="You&apos;ve used all your votes for today!">
-        <div className="rounded-2xl border border-[var(--border)] bg-white p-16 text-center animate-scale-in">
-          {/* Trophy illustration */}
-          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[var(--primary)]/10 flex items-center justify-center">
-            <svg className="w-12 h-12 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-            </svg>
-          </div>
-          <h2
-            className="text-2xl font-bold text-[var(--foreground)] mb-3"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
-            Come back tomorrow!
-          </h2>
-          <p className="text-[var(--muted-foreground)] mb-8 max-w-sm mx-auto">
-            You&apos;ve used all 3 of your votes for this session. New voting tokens refresh daily — or submit your own project to get more involved!
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href="/submit"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[var(--primary)] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
-            >
-              Submit a Project
-            </a>
-            <a
-              href="/leaderboard"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-[var(--border)] text-[var(--foreground)] font-semibold text-sm hover:bg-[var(--muted)] transition-all"
-            >
-              View Leaderboard
-            </a>
-          </div>
-        </div>
-      </AppShell>
-    );
-  }
-
-  if (!currentPair) {
+  if (votesRemaining <= 0 || !currentPair) {
     return (
       <AppShell title="🗳️ Voting" subtitle="">
         <div className="rounded-2xl border border-[var(--border)] bg-white p-16 text-center animate-scale-in">
@@ -206,10 +141,12 @@ export default function VotePage() {
             className="text-2xl font-bold text-[var(--foreground)] mb-3"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            You&apos;ve seen all projects!
+            {votesRemaining <= 0 ? "You’re out of votes for this session" : "You&apos;ve seen all projects!"}
           </h2>
           <p className="text-[var(--muted-foreground)] mb-8 max-w-sm mx-auto">
-            You&apos;ve voted on every matchup. Come back later when more projects are submitted!
+            {votesRemaining <= 0
+              ? `You used all ${MAX_VOTES_PER_SESSION} votes. Check back later for a new session.`
+              : "You&apos;ve voted on every matchup. Come back later when more projects are submitted!"}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
@@ -254,13 +191,8 @@ export default function VotePage() {
     if (!requireAuth("cast a vote")) {
       return;
     }
-    if (votesRemaining <= 0) return;
-    castVote(winnerId);
-    const newRemaining = votesRemaining - 1;
-    setVotesRemaining(newRemaining);
-    setSessionVotesRemaining(newRemaining);
-    setVoteCount(getSessionVotedPairIds().size);
-    if (voteHistory.length + 1 >= votePairs.length) {
+    castVote(winnerId, isAnonymousMode);
+    if (voteHistory.length + 1 >= MAX_VOTES_PER_SESSION || voteHistory.length + 1 >= votePairs.length) {
       router.push("/done");
     } else {
       router.push("/vote");
@@ -344,35 +276,35 @@ export default function VotePage() {
           <div className="tooltip-wrapper">
             <button
               type="button"
-              onClick={toggleBlindMode}
+              onClick={toggleAnonymousMode}
               className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 ${
-                isBlindMode ? "bg-[var(--primary)]" : "bg-[var(--muted-foreground)]/30"
+                isAnonymousMode ? "bg-[var(--primary)]" : "bg-[var(--muted-foreground)]/30"
               }`}
-              aria-pressed={isBlindMode}
-              aria-label={isBlindMode ? "Disable blind voting mode" : "Enable blind voting mode"}
+              aria-pressed={isAnonymousMode}
+              aria-label={isAnonymousMode ? "Disable anonymous voting" : "Enable anonymous voting"}
             >
-              <span className="sr-only">Toggle blind voting mode</span>
+              <span className="sr-only">Toggle anonymous voting</span>
               <span
                 className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                  isBlindMode ? "translate-x-5" : "translate-x-0"
+                  isAnonymousMode ? "translate-x-5" : "translate-x-0"
                 }`}
               />
             </button>
-            <span className="tooltip-content">Toggle to hide/show project names while voting</span>
+            <span className="tooltip-content">Toggle whether vote records include your session id</span>
           </div>
         </div>
         <div className="mt-3 flex items-center gap-2">
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${
-              isBlindMode
+              isAnonymousMode
                 ? "bg-[var(--primary)] text-white"
                 : "bg-[var(--border)] text-[var(--muted-foreground)]"
             }`}
           >
-            {isBlindMode ? "✓ Blind mode ON" : "Blind mode OFF"}
+            {isAnonymousMode ? "✓ Anonymous voting ON" : "Anonymous voting OFF"}
           </span>
-          {isBlindMode && (
-            <span className="text-xs text-[var(--muted-foreground)]">Project names hidden during voting</span>
+          {isAnonymousMode && (
+            <span className="text-xs text-[var(--muted-foreground)]">Votes are stored without a session_id link</span>
           )}
         </div>
       </div>
@@ -401,19 +333,6 @@ export default function VotePage() {
         </div>
       )}
 
-      {/* Session Votes Remaining Banner */}
-      <div className="mb-6 flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--muted)] px-5 py-3">
-        <div className="flex items-center gap-2">
-          <svg className="w-5 h-5 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-          </svg>
-          <span className="text-sm font-semibold text-[var(--foreground)]">
-            You have <span className="text-[var(--primary)]">{votesRemaining}</span> vote{votesRemaining !== 1 ? 's' : ''} remaining
-          </span>
-        </div>
-        <span className="text-xs text-[var(--muted-foreground)]">Votes reset daily</span>
-      </div>
-
       {/* Vote Duel */}
       <VoteDuel
         left={leftProject}
@@ -426,12 +345,12 @@ export default function VotePage() {
       {/* Voting Progress */}
       <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-[var(--muted-foreground)]">
         <p>
-          You've voted on{' '}
+          You&apos;ve used{' '}
           <span className="tooltip-wrapper">
-            <span className="font-semibold text-[var(--foreground)]">{voteCount}</span>
-            <span className="tooltip-content">Number of matchups you&apos;ve voted on in this browser session</span>
+            <span className="font-semibold text-[var(--foreground)]">{votesUsed}</span>
+            <span className="tooltip-content">Votes used in this authenticated session</span>
           </span>
-          {' '}matchup{voteCount !== 1 ? 's' : ''} this session
+          {' '}of {MAX_VOTES_PER_SESSION} votes this session ({votesRemaining} remaining)
         </p>
         {totalVotes !== null && (
           <>

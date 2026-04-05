@@ -184,6 +184,8 @@ export type Database = {
           right_project_id: string;
           winner_project_id: string;
           session_id?: string;
+          created_by_user_id?: string;
+          hackathon_id?: string;
           created_at?: string;
         };
         Relationships: [
@@ -215,6 +217,8 @@ export type Database = {
           right_project_id: string;
           winner_project_id: string;
           session_id: string | null;
+          created_by_user_id: string | null;
+          hackathon_id: string | null;
           created_at: string;
         };
         Update: {
@@ -223,6 +227,8 @@ export type Database = {
           right_project_id?: string;
           winner_project_id?: string;
           session_id?: string;
+          created_by_user_id?: string;
+          hackathon_id?: string;
           created_at?: string;
         };
       };

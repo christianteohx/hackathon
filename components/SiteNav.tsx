@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -15,11 +15,65 @@ const navLinks = [
 export function SiteNav() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("theme");
+      const shouldUseDark =
+        saved === "dark" ||
+        (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+      document.documentElement.classList.toggle("dark", shouldUseDark);
+      setIsDark(shouldUseDark);
+    } catch {
+      // no-op
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    document.documentElement.classList.toggle("dark", nextDark);
+    try {
+      localStorage.setItem("theme", nextDark ? "dark" : "light");
+    } catch {
+      // no-op
+    }
+  };
+
+  const themeButton = (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
+      aria-label="Toggle dark mode"
+      aria-pressed={isDark}
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {isDark ? (
+        <>
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41" />
+          </svg>
+          <span className="hidden sm:inline">Light</span>
+        </>
+      ) : (
+        <>
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3c.5 0 .79.54.53.97A7 7 0 0 0 20.03 12.26c.43-.26.97.03.97.53Z" />
+          </svg>
+          <span className="hidden sm:inline">Dark</span>
+        </>
+      )}
+    </button>
+  );
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden">
       <div className="max-w-5xl mx-auto px-6">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-14 gap-3">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group" onClick={() => setMobileOpen(false)}>
             <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-bold text-sm transition-transform group-hover:scale-105">
@@ -31,7 +85,7 @@ export function SiteNav() {
           </Link>
 
           {/* Desktop Nav links */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1 ml-auto">
             {navLinks.map(({ href, label }) => {
               const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
               return (
@@ -49,6 +103,8 @@ export function SiteNav() {
               );
             })}
           </div>
+
+          <div className="hidden md:block">{themeButton}</div>
 
           {/* Mobile Hamburger */}
           <button
@@ -113,6 +169,7 @@ export function SiteNav() {
                 </Link>
               );
             })}
+            <div className="pt-2">{themeButton}</div>
           </div>
         </div>
       </div>

@@ -80,23 +80,57 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
-        .from('projects')
-        .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags, created_at')
-        .order('elo_rating', { ascending: false })
-        .limit(50);
 
-      if (fetchError) {
-        console.error('Error fetching leaderboard:', fetchError);
+      const [projectsRes, votesRes, judgeScoresRes] = await Promise.all([
+        supabase
+          .from('projects')
+          .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags, created_at')
+          .limit(50),
+        supabase
+          .from('votes')
+          .select('winner_project_id'),
+        (supabase as any)
+          .from('judge_scores')
+          .select('project_id, innovation, technical, presentation, impact'),
+      ]);
+
+      if (projectsRes.error) {
+        console.error('Error fetching leaderboard:', projectsRes.error);
         setError('Could not load leaderboard. Please try again.');
-      } else {
-        // Parse comma-separated tags into array
-        const parsed = (data || []).map((p: Record<string, unknown>) => ({
+        setLoading(false);
+        return;
+      }
+
+      const voteCounts: Record<string, number> = {};
+      (votesRes.data || []).forEach((vote: { winner_project_id: string }) => {
+        voteCounts[vote.winner_project_id] = (voteCounts[vote.winner_project_id] || 0) + 1;
+      });
+
+      const judgeAverages: Record<string, number> = {};
+      const judgeBuckets: Record<string, number[]> = {};
+      (judgeScoresRes.data || []).forEach((s: { project_id: string; innovation: number; technical: number; presentation: number; impact: number }) => {
+        const avg = (s.innovation + s.technical + s.presentation + s.impact) / 4;
+        if (!judgeBuckets[s.project_id]) judgeBuckets[s.project_id] = [];
+        judgeBuckets[s.project_id].push(avg);
+      });
+      Object.entries(judgeBuckets).forEach(([projectId, arr]) => {
+        judgeAverages[projectId] = arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+      });
+
+      const parsed = (projectsRes.data || []).map((p: Record<string, unknown>) => {
+        const id = p.id as string;
+        const avgJudge = Number.isFinite(judgeAverages[id]) ? judgeAverages[id] : 0;
+        const voteCount = voteCounts[id] || 0;
+        const combinedScore = avgJudge + voteCount;
+        return {
           ...p,
           tags: p.tags ? (p.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean) : [],
-        }));
-        setProjects(parsed as Project[]);
-      }
+          elo_rating: Number.isFinite(combinedScore) ? combinedScore : 0,
+        };
+      });
+
+      parsed.sort((a: any, b: any) => (b.elo_rating ?? 0) - (a.elo_rating ?? 0));
+      setProjects(parsed as Project[]);
       setLoading(false);
     };
 
@@ -229,10 +263,11 @@ export default function LeaderboardPage() {
   return (
     <AppShell
       title="🏆 Leaderboard"
-      subtitle={activeTab === 'elo' ? 'Ranked by Elo rating — updated after every vote' : 'Ranked by votes in the last 24 hours'}
+      subtitle={activeTab === 'elo' ? 'Ranked by combined score (avg judge score + vote count)' : 'Ranked by votes in the last 24 hours'}
     >
+      <div className="leaderboard-print-root">
       {/* Tab Switcher */}
-      <div className="mb-6 flex gap-2">
+      <div className="mb-6 flex flex-wrap items-center gap-2 print:hidden">
         <button
           onClick={() => setActiveTab('elo')}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
@@ -241,7 +276,7 @@ export default function LeaderboardPage() {
               : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--border)]'
           }`}
         >
-          🏅 Elo Rating
+          🏅 Overall
         </button>
         <button
           onClick={() => setActiveTab('trending')}
@@ -253,11 +288,21 @@ export default function LeaderboardPage() {
         >
           📈 Trending
         </button>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="ml-auto inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border)] bg-white text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z" />
+          </svg>
+          Print Rankings
+        </button>
       </div>
 
       {/* Search & Filter Bar */}
       {!loading && !error && (
-        <div className="mb-6 flex flex-col sm:flex-row gap-3">
+        <div className="mb-6 flex flex-col sm:flex-row gap-3 print:hidden">
           {/* Search input */}
           <div className="relative flex-1">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,7 +442,7 @@ export default function LeaderboardPage() {
 
       {/* Top 3 Podium */}
       {!loading && !error && top3.length > 0 && (
-        <div className="mb-8">
+        <div className="mb-8 print:hidden">
           {/* Podium cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {/* 2nd place */}
@@ -513,7 +558,7 @@ export default function LeaderboardPage() {
 
       {/* Rest of the rankings */}
       {!loading && !error && rest.length > 0 && (
-        <div className="rounded-xl border border-[var(--border)] overflow-hidden bg-white shadow-sm">
+        <div className="rounded-xl border border-[var(--border)] overflow-hidden bg-white shadow-sm print:hidden">
           {/* Header row */}
           <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-[var(--muted)] text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
             <div className="col-span-1">Rank</div>
@@ -621,8 +666,36 @@ export default function LeaderboardPage() {
         </div>
       )}
 
+
       {!loading && !error && filteredProjects.length > 0 && (
-        <p className="mt-6 text-sm text-[var(--muted-foreground)] text-center">
+        <div className="leaderboard-print-only hidden print:block mt-2">
+          <div className="rounded-xl border border-[var(--border)] overflow-hidden print:rounded-none print:border-0">
+            <div className="grid grid-cols-12 gap-4 px-4 py-2 bg-[var(--muted)] text-xs font-semibold uppercase tracking-wide">
+              <div className="col-span-2">Rank</div>
+              <div className="col-span-6">Project</div>
+              <div className="col-span-2 text-center">Rating</div>
+              <div className="col-span-2 text-right">Judge</div>
+            </div>
+            {filteredProjects.map((project, idx) => {
+              const avgScore = judgeScores[project.id];
+              return (
+                <div key={`print-${project.id}`} className="grid grid-cols-12 gap-4 px-4 py-2 border-b border-[var(--border)] text-sm">
+                  <div className="col-span-2 font-semibold">#{idx + 1}</div>
+                  <div className="col-span-6 min-w-0">
+                    <p className="font-semibold truncate">{project.name}</p>
+                    {project.team_name && <p className="text-xs text-[var(--muted-foreground)]">{project.team_name}</p>}
+                  </div>
+                  <div className="col-span-2 text-center font-semibold">{Math.round(project.elo_rating)}</div>
+                  <div className="col-span-2 text-right">{avgScore != null ? avgScore.toFixed(1) : '—'}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {!loading && !error && filteredProjects.length > 0 && (
+        <p className="mt-6 text-sm text-[var(--muted-foreground)] text-center print:hidden">
           {filteredProjects.length === projects.length
             ? `${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''} ranked`
             : `${filteredProjects.length} of ${projects.length} projects`}
@@ -637,6 +710,7 @@ export default function LeaderboardPage() {
           )}
         </p>
       )}
+      </div>
     </AppShell>
   );
 }
