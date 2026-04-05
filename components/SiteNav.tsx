@@ -147,8 +147,9 @@ export function SiteNav() {
             <button
               type="button"
               onClick={() => {
-                console.log("[SiteNav] X button clicked, mobileOpen =", false);
+                console.log("[SiteNav] X button clicked, mobileOpen =", false, "timestamp:", Date.now());
                 setMobileOpen(false);
+                console.log("[SiteNav] setMobileOpen(false) called");
               }}
               className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors cursor-pointer"
               aria-label="Close menu"
