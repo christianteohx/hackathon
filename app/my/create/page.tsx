@@ -18,7 +18,7 @@ export default function CreateProjectPage() {
     if (!requireAuth("create a project")) return;
 
     setSubmitting(true);
-    createProject({
+    await createProject({
       name: name.trim(),
       summary: summary.trim(),
       owner: `${user?.name ?? "Team"}'s Project`

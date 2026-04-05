@@ -131,13 +131,25 @@ export default function SubmitPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<{ user: { id: string } } | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [hackathonContact, setHackathonContact] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      setSessionLoading(false);
     });
   }, []);
+
+  const isValidHttpUrl = (value: string) => {
+    if (!value) return true;
+    try {
+      const parsed = new URL(value);
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -155,8 +167,28 @@ export default function SubmitPage() {
       setSubmitting(false);
       return;
     }
-    if (description.length < 20) {
+    const trimmedDescription = description.trim();
+    const trimmedTagline = tagline.trim();
+    const trimmedDemoUrl = demoUrl.trim();
+    const trimmedGithubUrl = githubUrl.trim();
+
+    if (trimmedTagline.length < 8) {
+      setError("Tagline must be at least 8 characters");
+      setSubmitting(false);
+      return;
+    }
+    if (trimmedDescription.length < 20) {
       setError("Please write a description of at least 20 characters");
+      setSubmitting(false);
+      return;
+    }
+    if (!isValidHttpUrl(trimmedDemoUrl)) {
+      setError("Demo URL must start with http:// or https://");
+      setSubmitting(false);
+      return;
+    }
+    if (!isValidHttpUrl(trimmedGithubUrl)) {
+      setError("GitHub URL must start with http:// or https://");
       setSubmitting(false);
       return;
     }
@@ -166,14 +198,14 @@ export default function SubmitPage() {
       return;
     }
 
-    const { data: hackathon } = await supabase
+    const { data: hackathon, error: hackathonError } = await supabase
       .from("hackathons")
       .select("id, contact_email")
       .eq("is_active", true)
       .limit(1)
       .single();
 
-    if (!hackathon) {
+    if (hackathonError || !hackathon) {
       setError("No active hackathon found. Please contact an organizer.");
       setSubmitting(false);
       return;
@@ -185,24 +217,47 @@ export default function SubmitPage() {
 
     const joinCode = generateJoinCode();
 
-    const { error: insertError } = await supabase
+    const { data: insertedProject, error: insertError } = await supabase
       .from("projects")
       .insert({
         name: trimmedProjectName,
         team_name: teamName.trim() || null,
-        tagline: tagline.trim(),
-        description: description.trim(),
-        demo_url: demoUrl.trim() || null,
-        github_url: githubUrl.trim() || null,
+        tagline: trimmedTagline,
+        description: trimmedDescription,
+        demo_url: trimmedDemoUrl || null,
+        github_url: trimmedGithubUrl || null,
         join_code: joinCode,
         created_by_user_id: session.user.id,
         hackathon_id: (hackathon as { id: string }).id,
         elo_rating: 1200,
         tags: tags.trim(),
-      });
+      })
+      .select("id")
+      .single();
 
-    if (insertError) {
-      setError("Error submitting: " + insertError.message);
+    if (insertError || !insertedProject) {
+      setError("Error submitting: " + (insertError?.message || "Unknown error"));
+      setSubmitting(false);
+      return;
+    }
+
+    const projectId = (insertedProject as { id: string }).id;
+
+    const [memberRes, profileRes] = await Promise.all([
+      supabase.from("project_members").insert({
+        project_id: projectId,
+        user_id: session.user.id,
+        role: "owner",
+      }),
+      supabase.from("profiles").update({ project_id: projectId }).eq("id", session.user.id),
+    ]);
+
+    if (memberRes.error || profileRes.error) {
+      setError(
+        memberRes.error?.message ||
+          profileRes.error?.message ||
+          "Project was created, but we could not attach your profile. Please try joining with your join code."
+      );
       setSubmitting(false);
       return;
     }
@@ -274,7 +329,7 @@ export default function SubmitPage() {
       )}
 
       {/* Login warning */}
-      {!session && (
+      {!sessionLoading && !session && (
         <div className="rounded-xl border border-[var(--warning)]/20 bg-[var(--warning)]/5 p-4 text-[var(--warning)] text-sm mb-6 flex items-start gap-3">
           <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -404,7 +459,7 @@ export default function SubmitPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || sessionLoading || !session}
             className="mt-2 w-full rounded-xl bg-[var(--primary)] text-white px-6 py-4 font-semibold text-base hover:opacity-90 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? (
@@ -421,6 +476,12 @@ export default function SubmitPage() {
               </>
             )}
           </button>
+
+          {!sessionLoading && !session && (
+            <p className="text-xs text-center text-[var(--muted-foreground)]">
+              Please log in before submitting.
+            </p>
+          )}
 
           <Link href="/" className="text-sm text-[var(--muted-foreground)] hover:text-[var(--primary)] text-center transition-colors">
             ← Back home

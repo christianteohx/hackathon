@@ -12,14 +12,15 @@ export default function JoinProjectPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!requireAuth("join a project")) {
       return;
     }
 
     setIsLoading(true);
-    const result = joinProjectByCode(joinCode);
+    setError("");
+    const result = await joinProjectByCode(joinCode);
 
     if (!result.ok) {
       setError(result.message);

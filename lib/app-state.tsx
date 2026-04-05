@@ -88,7 +88,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         currentUserId = session.user.id;
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("name, projectId")
+          .select("name, project_id")
           .eq("id", session.user.id)
           .single();
         if (profileError) {
@@ -101,7 +101,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             id: session.user.id,
             name: profile.name || session.user.email?.split("@")[0] || "Hackathon Voter",
             email: session.user.email!,
-            projectId: profile.projectId,
+            projectId: profile.project_id,
           });
         }
       }
@@ -232,7 +232,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           id: supabaseUser.id,
           name: profileData?.name || name.trim() || normalizedEmail.split("@")[0] || "Hackathon Voter",
           email: normalizedEmail,
-          projectId: profileData?.projectId ?? null,
+          projectId: profileData?.project_id ?? null,
         });
         setIsAuthModalOpen(false);
       }
@@ -311,6 +311,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         };
         setProjects((prev) => [...prev, newProject]);
         setUser((prev) => ({
+          id: prev?.id ?? user.id,
           name: prev?.name ?? "Hackathon Voter",
           email: prev?.email ?? "",
           projectId: newProject.id,
@@ -333,7 +334,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }
       const { error: profileUpdateError } = await supabase
         .from("profiles")
-        .update({ projectId: project.id })
+        .update({ project_id: project.id })
         .eq("id", user.id);
       if (profileUpdateError) {
         console.error("Error updating user project ID:", profileUpdateError);

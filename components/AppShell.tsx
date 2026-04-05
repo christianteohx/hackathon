@@ -17,11 +17,11 @@ export function AppShell({
 
   return (
     <main className="min-h-screen flex flex-col bg-[var(--background)]">
-      <div className="max-w-5xl mx-auto w-full px-6 py-12">
+      <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-12">
         {/* Page Header */}
         <header className="mb-10 print:hidden">
           {/* Breadcrumb / Back nav */}
-          <div className="flex items-center gap-2 mb-6 text-sm">
+          <div className="flex flex-wrap items-center gap-2 mb-6 text-sm">
             <Link href="/" className="text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors">
               Home
             </Link>
@@ -29,7 +29,7 @@ export function AppShell({
             <span className="text-[var(--foreground)]">{title}</span>
             
             {/* Auth */}
-            <div className="ml-auto flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-2 sm:gap-3">
               {!isAuthed ? (
                 <button 
                   type="button" 
@@ -57,7 +57,7 @@ export function AppShell({
 
           {/* Title */}
           <h1 
-            className="text-4xl md:text-5xl font-bold text-[var(--foreground)] tracking-tight"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--foreground)] tracking-tight"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             {title}
@@ -65,7 +65,7 @@ export function AppShell({
           
           {/* Subtitle */}
           {subtitle && (
-            <p className="mt-3 text-lg text-[var(--muted-foreground)] max-w-2xl">
+            <p className="mt-3 text-base sm:text-lg text-[var(--muted-foreground)] max-w-2xl">
               {subtitle}
             </p>
           )}

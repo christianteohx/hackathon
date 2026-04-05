@@ -13,6 +13,12 @@ type MyProfile = {
   joinDate: string | null;
 };
 
+type OwnedProject = {
+  id: string;
+  name: string;
+  created_at: string | null;
+};
+
 export default function MyPage() {
   const { user, projects, saveProject, requireAuth } = useAppState();
   const [profile, setProfile] = useState<MyProfile | null>(null);
@@ -23,6 +29,8 @@ export default function MyPage() {
   const [name, setName] = useState(memberProject?.name ?? "");
   const [summary, setSummary] = useState(memberProject?.summary ?? "");
   const [saved, setSaved] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [ownedProjects, setOwnedProjects] = useState<OwnedProject[]>([]);
 
   useEffect(() => {
     setName(memberProject?.name ?? "");
@@ -32,12 +40,15 @@ export default function MyPage() {
 
   useEffect(() => {
     const loadProfile = async () => {
+      setProfileLoading(true);
       if (!user?.id) {
         setProfile(null);
+        setOwnedProjects([]);
+        setProfileLoading(false);
         return;
       }
 
-      const [profileRes, projectCountRes] = await Promise.all([
+      const [profileRes, ownedProjectsRes] = await Promise.all([
         (supabase as any)
           .from("profiles")
           .select("name, email, created_at")
@@ -45,24 +56,30 @@ export default function MyPage() {
           .maybeSingle(),
         supabase
           .from("projects")
-          .select("id", { count: "exact", head: true })
-          .eq("created_by_user_id", user.id),
+          .select("id, name, created_at")
+          .eq("created_by_user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(6),
       ]);
 
       if (profileRes.error) {
         console.error("profile error:", profileRes.error);
       }
-      if (projectCountRes.error) {
-        console.error("project count error:", projectCountRes.error);
+      if (ownedProjectsRes.error) {
+        console.error("owned projects error:", ownedProjectsRes.error);
       }
+
+      const owned = ((ownedProjectsRes.data || []) as OwnedProject[]);
+      setOwnedProjects(owned);
 
       setProfile({
         displayName:
           profileRes.data?.name || user.name || user.email?.split("@")[0] || "Participant",
         email: profileRes.data?.email || user.email || "—",
-        projectCount: projectCountRes.count || 0,
+        projectCount: owned.length,
         joinDate: profileRes.data?.created_at || null,
       });
+      setProfileLoading(false);
     };
 
     loadProfile();
@@ -92,6 +109,22 @@ export default function MyPage() {
 
   return (
     <AppShell title="Dashboard" subtitle="Manage your hackathon project and team.">
+      {profileLoading && user && (
+        <section className="mb-6 animate-fade-in-up">
+          <div className="rounded-2xl border border-[var(--border)] bg-white p-6">
+            <div className="h-7 w-40 rounded skeleton" />
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3">
+                  <div className="h-3 w-24 rounded skeleton" />
+                  <div className="mt-2 h-4 w-32 rounded skeleton" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {user && profile && (
         <section className="mb-6 animate-fade-in-up">
           <div className="rounded-2xl border border-[var(--border)] bg-white p-6 card-hover">
@@ -119,6 +152,26 @@ export default function MyPage() {
           </div>
         </section>
       )}
+      {user && profile && ownedProjects.length > 0 && (
+        <section className="mb-6 animate-fade-in-up">
+          <div className="rounded-2xl border border-[var(--border)] bg-white p-6 card-hover">
+            <h2 className="text-lg font-bold text-[var(--foreground)]" style={{ fontFamily: "var(--font-display)" }}>
+              Projects You Created
+            </h2>
+            <div className="mt-4 space-y-2">
+              {ownedProjects.map((project) => (
+                <div key={project.id} className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--muted)]/20 px-4 py-3">
+                  <p className="text-sm font-semibold text-[var(--foreground)] truncate">{project.name}</p>
+                  <span className="text-xs text-[var(--muted-foreground)] whitespace-nowrap">
+                    {project.created_at ? new Date(project.created_at).toLocaleDateString() : "—"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {!memberProject ? (
         <section className="grid gap-4 sm:grid-cols-2 animate-fade-in-up">
           {/* Create Project Card */}
