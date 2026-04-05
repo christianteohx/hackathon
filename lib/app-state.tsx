@@ -6,8 +6,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { buildVotePairs, MOCK_PROJECTS } from "./mockData";
 import { Project, VotePair, VoteRecord } from "./types";
 import { supabase } from "@/lib/supabase";
-import { calculateNewEloRatings } from "./elo";
-import { updateEloAfterVote, getProjectElo } from "./elo-service";
+import { updateEloAfterVote } from "./elo-service";
 
 type SessionUser = {
   id: string;
@@ -32,11 +31,14 @@ type AppState = {
   createProject: (project: Pick<Project, "name" | "summary" | "owner">) => void;
   joinProjectByCode: (joinCode: string) => { ok: true } | { ok: false; message: string };
   saveProject: (projectId: string, update: Pick<Project, "name" | "summary">) => void;
-  castVote: (winnerId: string) => void;
+  castVote: (winnerId: string, anonymous?: boolean) => void;
   resetVoting: () => void;
   isBlindMode: boolean;
   toggleBlindMode: () => void;
   setBlindMode: (enabled: boolean) => void;
+  isAnonymousMode: boolean;
+  toggleAnonymousMode: () => void;
+  setAnonymousMode: (enabled: boolean) => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -49,7 +51,6 @@ function generateJoinCode(name: string) {
 }
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [hydrated, setHydrated] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -58,6 +59,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authPromptAction, setAuthPromptAction] = useState("continue");
   const [isBlindMode, setIsBlindMode] = useState(false);
+  const [isAnonymousMode, setIsAnonymousMode] = useState(false);
+  const [activeHackathonId, setActiveHackathonId] = useState<string | null>(null);
   // Session-level localStorage tracking of voted pair IDs (covers both DB failures and repeat votes)
   const [localVotedPairIds, setLocalVotedPairIds] = useState<Set<string>>(new Set());
 
@@ -75,12 +78,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const loadInitialData = async () => {
+      let currentUserId: string | null = null;
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.error("Error fetching session:", sessionError);
         setIsAuthed(false);
         setUser(null);
       } else if (session) {
+        currentUserId = session.user.id;
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("name, projectId")
@@ -101,6 +106,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      const { data: activeHackathon } = await (supabase as any)
+        .from("hackathons")
+        .select("id")
+        .eq("is_active", true)
+        .order("start_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setActiveHackathonId(activeHackathon?.id ?? null);
+
       const { data: fetchedProjects, error: projectsError } = await supabase
  .from("projects")
  .select("*");
@@ -115,6 +129,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           owner: p.team_name || null,
  joinCode: p.join_code,
  elo_rating: p.elo_rating ?? 1200,
+ is_featured: p.is_featured ?? false,
  }));
  setProjects(mappedProjects as Project[]);
  } else {
@@ -122,9 +137,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
  setProjects(MOCK_PROJECTS);
  }
 
- const { data: fetchedVotes, error: votesError } = await supabase
+      let votesQuery = supabase
         .from("votes")
         .select("*");
+
+      if (currentUserId) {
+        votesQuery = votesQuery.or(`session_id.eq.${currentUserId},created_by_user_id.eq.${currentUserId}`);
+      } else {
+        // Anonymous browser-only mode falls back to localStorage dedupe.
+        votesQuery = votesQuery.limit(0);
+      }
+
+      const { data: fetchedVotes, error: votesError } = await votesQuery;
       if (votesError) {
         console.error("Error fetching votes:", votesError);
         setVoteHistory([]);
@@ -141,7 +165,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setVoteHistory(mappedVotes);
       }
 
-      setHydrated(true);
     };
 
     loadInitialData();
@@ -176,6 +199,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     isBlindMode,
     toggleBlindMode: () => setIsBlindMode((prev) => !prev),
     setBlindMode: setIsBlindMode,
+    isAnonymousMode,
+    toggleAnonymousMode: () => setIsAnonymousMode((prev) => !prev),
+    setAnonymousMode: setIsAnonymousMode,
     login: async (name, email) => {
       const normalizedEmail = email.trim().toLowerCase();
       if (!normalizedEmail) return;
@@ -188,7 +214,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (supabaseUser) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .upsert({
             id: supabaseUser.id,
@@ -314,6 +340,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return { ok: false, message: "Failed to join project." };
       }
       setUser((prev) => ({
+        id: prev?.id ?? user.id,
         name: prev?.name ?? "Hackathon Voter",
         email: prev?.email ?? "",
         projectId: project.id,
@@ -340,26 +367,44 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         )
       );
     },
-    castVote: async (winnerId) => {
+    castVote: async (winnerId, anonymous = false) => {
       if (!user) {
         console.error("User not authenticated.");
         return;
       }
       if (!currentPair) return;
 
+      const userVoteCount = voteHistory.length;
+      if (userVoteCount >= 3) {
+        console.warn("Vote limit reached (3 votes per session)");
+        return;
+      }
+
       const loserId =
         currentPair.leftProjectId === winnerId
           ? currentPair.rightProjectId
           : currentPair.leftProjectId;
 
+      // Build vote insert object - omit session_id if anonymous
+      const voteInsert: Record<string, unknown> = {
+        left_project_id: currentPair.leftProjectId,
+        right_project_id: currentPair.rightProjectId,
+        winner_project_id: winnerId,
+        created_by_user_id: user.id,
+      };
+      
+      // Only include session_id if NOT voting anonymously
+      if (!anonymous) {
+        voteInsert.session_id = user.id;
+      }
+
+      if (activeHackathonId) {
+        voteInsert.hackathon_id = activeHackathonId;
+      }
+
       const { data: newVote, error: voteError } = await supabase
         .from("votes")
-        .insert({
-          left_project_id: currentPair.leftProjectId,
-          right_project_id: currentPair.rightProjectId,
-          winner_project_id: winnerId,
-          session_id: user.id,
-        })
+        .insert(voteInsert)
         .select()
         .single();
 
@@ -387,6 +432,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           owner: p.team_name || null,
               joinCode: p.join_code,
               elo_rating: p.elo_rating ?? 1200,
+              is_featured: p.is_featured ?? false,
             }))
           );
         }
