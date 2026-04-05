@@ -35,7 +35,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Providers>
           <SiteNav />
-          {children}
+          <div style={{ paddingTop: "var(--nav-height, 3.5rem)" }}>{children}</div>
         </Providers>
       </body>
     </html>

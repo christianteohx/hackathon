@@ -261,7 +261,6 @@ export function SiteNav() {
         </aside>
       </div>
 
-      {!mounted && <div style={{ height: "var(--nav-height, 3.5rem)", borderBottom: "1px solid var(--border)" }} />}
     </>
   );
 }
