@@ -17,12 +17,19 @@ interface Hackathon {
   announcements: string | null;
 }
 
+interface ActivityItem {
+  id: string;
+  text: string;
+  created_at: string;
+}
+
 export default function HomePage() {
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [loading, setLoading] = useState(true);
   const [votingDeadline, setVotingDeadline] = useState<Date | null>(null);
   const [announcement, setAnnouncement] = useState<string | null>(null);
   const [announcementDismissed, setAnnouncementDismissed] = useState(false);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
 
   useEffect(() => {
     const fetchHackathons = async () => {
@@ -53,6 +60,59 @@ export default function HomePage() {
     };
 
     fetchHackathons();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchActivity = async () => {
+      const [recentProjectsRes, recentVotesRes, projectsMapRes] = await Promise.all([
+        (supabase as any)
+          .from("projects")
+          .select("id, name, created_at")
+          .order("created_at", { ascending: false })
+          .limit(8),
+        (supabase as any)
+          .from("votes")
+          .select("id, created_at, winner_project_id")
+          .order("created_at", { ascending: false })
+          .limit(12),
+        (supabase as any).from("projects").select("id, name"),
+      ]);
+
+      if (cancelled) return;
+
+      const projectNameById = new Map<string, string>();
+      (projectsMapRes.data || []).forEach((project: { id: string; name: string }) => {
+        projectNameById.set(project.id, project.name);
+      });
+
+      const projectEvents: ActivityItem[] = (recentProjectsRes.data || []).map((project: { id: string; name: string; created_at: string }) => ({
+        id: `project-${project.id}`,
+        text: `🔥 ${project.name} just submitted`,
+        created_at: project.created_at,
+      }));
+
+      const voteEvents: ActivityItem[] = (recentVotesRes.data || []).map((vote: { id: string; created_at: string; winner_project_id: string }) => ({
+        id: `vote-${vote.id}`,
+        text: `⚡ A vote was cast for ${projectNameById.get(vote.winner_project_id) || "a project"}`,
+        created_at: vote.created_at,
+      }));
+
+      const merged = [...projectEvents, ...voteEvents]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 16);
+
+      setActivity(merged);
+    };
+
+    fetchActivity();
+    const timer = setInterval(fetchActivity, 12000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, []);
 
   const dismissAnnouncement = () => {
@@ -152,6 +212,19 @@ export default function HomePage() {
                 Start Voting
               </Link>
             </div>
+
+            {/* Live activity ticker */}
+            {activity.length > 0 && (
+              <div className="mt-10 rounded-xl border border-[var(--border)] bg-white/80 backdrop-blur p-3 overflow-hidden">
+                <div className="ticker-track flex items-center gap-4 text-sm text-[var(--muted-foreground)]">
+                  {[...activity, ...activity].map((item, idx) => (
+                    <span key={`${item.id}-${idx}`} className="whitespace-nowrap">
+                      {item.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

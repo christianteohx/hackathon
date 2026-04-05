@@ -155,7 +155,7 @@ export default function AdminPage() {
       {/* Announcement */}
       {!loading && (
         <div className="mb-10 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-2">📣 Home Announcement Banner</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">📣 Send Announcement</h2>
           <p className="text-sm text-gray-600 mb-4">
             This message appears as a dismissible banner at the top of the home page.
           </p>
@@ -175,7 +175,7 @@ export default function AdminPage() {
                   disabled={savingAnnouncement}
                   className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {savingAnnouncement ? 'Saving...' : 'Save Announcement'}
+                  {savingAnnouncement ? 'Sending...' : 'Send Announcement'}
                 </button>
                 {announcementMessage && (
                   <p className="text-sm text-gray-600">{announcementMessage}</p>
@@ -211,6 +211,18 @@ export default function AdminPage() {
             className="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
           >
             ➕ Add Project
+          </a>
+          <a
+            href="/stats"
+            className="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
+          >
+            📊 Event Stats
+          </a>
+          <a
+            href="/results"
+            className="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
+          >
+            🏆 Final Results
           </a>
         </div>
       </div>
