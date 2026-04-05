@@ -27,6 +27,7 @@ export default function VotePage() {
   const [totalVotes, setTotalVotes] = useState<number | null>(null);
   const [votingDeadline, setVotingDeadline] = useState<Date | null>(null);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+  const [isSubmittingVote, setIsSubmittingVote] = useState(false);
   const MAX_VOTES_PER_SESSION = 3;
   const votesUsed = voteHistory.length;
   const votesRemaining = Math.max(0, MAX_VOTES_PER_SESSION - votesUsed);
@@ -187,16 +188,24 @@ export default function VotePage() {
   const progress = `${voteHistory.length}/${votePairs.length} matchups voted`;
   const pair = currentPair;
 
-  function handleVote(winnerId: string) {
+  async function handleVote(winnerId: string) {
+    if (isSubmittingVote) return;
     if (!requireAuth("cast a vote")) {
       return;
     }
-    castVote(winnerId, isAnonymousMode);
-    if (voteHistory.length + 1 >= MAX_VOTES_PER_SESSION || voteHistory.length + 1 >= votePairs.length) {
-      router.push("/done");
-    } else {
-      router.push("/vote");
+
+    setIsSubmittingVote(true);
+    const didSaveVote = await castVote(winnerId, isAnonymousMode);
+
+    if (didSaveVote) {
+      if (voteHistory.length + 1 >= MAX_VOTES_PER_SESSION || voteHistory.length + 1 >= votePairs.length) {
+        router.push("/done");
+      } else {
+        router.push("/vote");
+      }
     }
+
+    setIsSubmittingVote(false);
   }
 
   return (
@@ -340,6 +349,7 @@ export default function VotePage() {
         onVote={handleVote}
         progress={progress}
         isBlindMode={isBlindMode}
+        disabled={isSubmittingVote}
       />
 
       {/* Voting Progress */}

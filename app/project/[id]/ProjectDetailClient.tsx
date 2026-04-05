@@ -27,6 +27,14 @@ type SimilarProject = {
   elo_rating: number;
 };
 
+function normalizeExternalUrl(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
 function normalizeProject(raw: any): ProjectDetail {
   return {
     id: raw.id,
@@ -34,8 +42,8 @@ function normalizeProject(raw: any): ProjectDetail {
     tagline: raw.tagline || '',
     description: raw.description || '',
     team_name: raw.team_name ?? null,
-    demo_url: raw.demo_url ?? raw.demoUrl ?? null,
-    github_url: raw.github_url ?? raw.githubUrl ?? null,
+    demo_url: normalizeExternalUrl(raw.demo_url ?? raw.demoUrl ?? null),
+    github_url: normalizeExternalUrl(raw.github_url ?? raw.githubUrl ?? null),
     elo_rating: Number(raw.elo_rating ?? raw.eloRating ?? 0),
     join_code: raw.join_code ?? raw.joinCode ?? '',
     created_at: raw.created_at ?? raw.createdAt ?? '',
@@ -250,7 +258,7 @@ export default function ProjectDetailClient({ id }: { id: string }) {
           textDecoration: 'none', fontSize: '0.9rem', fontWeight: '500',
           color: '#374151', display: 'inline-flex', alignItems: 'center'
         }}>
-          🗳️ Vote for this project
+          🗳️ Go to voting
         </Link>
       </div>
 

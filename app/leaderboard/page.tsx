@@ -48,9 +48,11 @@ export default function LeaderboardPage() {
   const [newProjectIds, setNewProjectIds] = useState<Set<string>>(new Set());
   const prevProjectsRef = useRef<string[]>([]);
 
-  // Extract all unique tags from projects
+  const sourceProjects = activeTab === 'trending' ? trendingProjects : projects;
+
+  // Extract all unique tags from the currently visible tab
   const allTags = Array.from(
-    new Set(projects.flatMap((p) => p.tags ?? []))
+    new Set(sourceProjects.flatMap((p) => p.tags ?? []))
   ).sort();
 
   // Fetch judge scores for all projects
@@ -126,9 +128,16 @@ export default function LeaderboardPage() {
         const avgJudge = Number.isFinite(judgeAverages[id]) ? judgeAverages[id] : 0;
         const voteCount = voteCounts[id] || 0;
         const rankingScore = avgJudge + voteCount;
+        const rawTags = p.tags;
+        const normalizedTags = Array.isArray(rawTags)
+          ? rawTags.map((t: string) => t.trim()).filter(Boolean)
+          : typeof rawTags === 'string'
+          ? rawTags.split(',').map((t: string) => t.trim()).filter(Boolean)
+          : [];
+
         return {
           ...p,
-          tags: p.tags ? (p.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+          tags: normalizedTags,
           rankingScore: Number.isFinite(rankingScore) ? rankingScore : 0,
           voteCount,
           judgeAvg: avgJudge,
@@ -183,10 +192,19 @@ export default function LeaderboardPage() {
 
       // Sort by vote count order and parse tags
       if (trendingData) {
-        const parsed = (trendingData as Record<string, unknown>[]).map((p) => ({
-          ...p,
-          tags: p.tags ? (p.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean) : [],
-        }));
+        const parsed = (trendingData as Record<string, unknown>[]).map((p) => {
+          const rawTags = p.tags;
+          const normalizedTags = Array.isArray(rawTags)
+            ? rawTags.map((t: string) => t.trim()).filter(Boolean)
+            : typeof rawTags === 'string'
+            ? rawTags.split(',').map((t: string) => t.trim()).filter(Boolean)
+            : [];
+
+          return {
+            ...p,
+            tags: normalizedTags,
+          };
+        });
         const sorted = sortedIds
           .map(id => parsed.find((p: Record<string, unknown>) => p.id === id))
           .filter(Boolean) as Project[];
@@ -208,18 +226,19 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const currentIds = projects.map((p) => p.id);
     const newIds = new Set(currentIds.filter((id) => !prevProjectsRef.current.includes(id)));
+
+    prevProjectsRef.current = currentIds;
+
     if (newIds.size > 0) {
       setNewProjectIds(newIds);
       // Clear the "new" flag after animation completes
       const timer = setTimeout(() => setNewProjectIds(new Set()), 800);
       return () => clearTimeout(timer);
     }
-    prevProjectsRef.current = currentIds;
   }, [projects]);
 
   // Filter projects by search query and selected tag
   useEffect(() => {
-    const sourceProjects = activeTab === 'trending' ? trendingProjects : projects;
     let result = sourceProjects;
 
     if (searchQuery.trim()) {
@@ -232,7 +251,8 @@ export default function LeaderboardPage() {
     }
 
     if (selectedTag) {
-      result = result.filter((p) => p.tags && p.tags.includes(selectedTag));
+      const selectedLower = selectedTag.toLowerCase();
+      result = result.filter((p) => p.tags && p.tags.some((tag) => tag.toLowerCase() === selectedLower));
     }
 
     setFilteredProjects(result);
@@ -704,9 +724,9 @@ export default function LeaderboardPage() {
 
       {!loading && !error && filteredProjects.length > 0 && (
         <p className="mt-6 text-sm text-[var(--muted-foreground)] text-center print:hidden">
-          {filteredProjects.length === projects.length
+          {filteredProjects.length === sourceProjects.length
             ? `${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''} ranked`
-            : `${filteredProjects.length} of ${projects.length} projects`}
+            : `${filteredProjects.length} of ${sourceProjects.length} projects`}
           {' · '}Leaderboard updates after every vote
           {(searchQuery || selectedTag) && (
             <button

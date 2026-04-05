@@ -10,12 +10,14 @@ export function VoteDuel({
   onVote,
   progress,
   isBlindMode,
+  disabled = false,
 }: {
   left: Project;
   right: Project;
-  onVote: (winnerId: string) => void;
+  onVote: (winnerId: string) => void | Promise<void>;
   progress: string;
   isBlindMode: boolean;
+  disabled?: boolean;
 }) {
   const [voteConfirmed, setVoteConfirmed] = useState(false);
   const [votedWinnerId, setVotedWinnerId] = useState<string | null>(null);
@@ -29,6 +31,8 @@ export function VoteDuel({
   }, [left.id, right.id]);
 
   const handleVote = useCallback((winnerId: string) => {
+    if (disabled || animatingOut !== null || voteConfirmed) return;
+
     // Determine which card to animate out (the loser)
     const loser = winnerId === left.id ? right.id : left.id;
     const loserSide = winnerId === left.id ? "right" : "left";
@@ -47,7 +51,7 @@ export function VoteDuel({
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [left.id, right.id, isBlindMode, onVote]);
+  }, [left.id, right.id, isBlindMode, onVote, disabled, animatingOut, voteConfirmed]);
 
   const handleContinue = () => {
     if (votedWinnerId) {
@@ -128,7 +132,8 @@ export function VoteDuel({
         <button
           type="button"
           onClick={handleContinue}
-          className="mt-8 w-full rounded-xl bg-[var(--primary)] text-white px-6 py-4 text-lg font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-lg flex items-center justify-center gap-2"
+          disabled={disabled}
+          className="mt-8 w-full rounded-xl bg-[var(--primary)] text-white px-6 py-4 text-lg font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue to Next Vote
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,7 +191,8 @@ export function VoteDuel({
           <button
             type="button"
             onClick={() => handleVote(left.id)}
-            className="w-full rounded-xl bg-[var(--primary)] text-white px-6 py-4 text-lg font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-lg flex items-center justify-center gap-2 group"
+            disabled={disabled || animatingOut !== null}
+            className="w-full rounded-xl bg-[var(--primary)] text-white px-6 py-4 text-lg font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-lg flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>Vote for this</span>
             <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,7 +229,8 @@ export function VoteDuel({
           <button
             type="button"
             onClick={() => handleVote(right.id)}
-            className="w-full rounded-xl bg-[var(--primary)] text-white px-6 py-4 text-lg font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-lg flex items-center justify-center gap-2 group"
+            disabled={disabled || animatingOut !== null}
+            className="w-full rounded-xl bg-[var(--primary)] text-white px-6 py-4 text-lg font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-lg flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>Vote for this</span>
             <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

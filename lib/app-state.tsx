@@ -29,9 +29,9 @@ type AppState = {
   closeAuthModal: () => void;
   requireAuth: (action?: string) => boolean;
   createProject: (project: Pick<Project, "name" | "summary" | "owner">) => void;
-  joinProjectByCode: (joinCode: string) => { ok: true } | { ok: false; message: string };
+  joinProjectByCode: (joinCode: string) => Promise<{ ok: true } | { ok: false; message: string }>;
   saveProject: (projectId: string, update: Pick<Project, "name" | "summary">) => void;
-  castVote: (winnerId: string, anonymous?: boolean) => void;
+  castVote: (winnerId: string, anonymous?: boolean) => Promise<boolean>;
   resetVoting: () => void;
   isBlindMode: boolean;
   toggleBlindMode: () => void;
@@ -328,10 +328,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         .select("id")
         .eq("join_code", normalized)
         .single();
+
       if (projectError || !project) {
         console.error("Error finding project by join code:", projectError?.message);
         return { ok: false, message: "Join code not found. Try again." };
       }
+
+      if (user.projectId === project.id) {
+        return { ok: false, message: "You are already in this project." };
+      }
+
       const { error: profileUpdateError } = await supabase
         .from("profiles")
         .update({ project_id: project.id })
@@ -340,6 +346,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         console.error("Error updating user project ID:", profileUpdateError);
         return { ok: false, message: "Failed to join project." };
       }
+
+      const { error: memberError } = await supabase
+        .from("project_members")
+        .upsert({
+          project_id: project.id,
+          user_id: user.id,
+          role: "member",
+        } as any, { onConflict: "project_id,user_id" });
+
+      if (memberError) {
+        console.error("Error adding project member:", memberError);
+        return { ok: false, message: "Joined project profile, but failed to add team membership." };
+      }
+
       setUser((prev) => ({
         id: prev?.id ?? user.id,
         name: prev?.name ?? "Hackathon Voter",
@@ -371,14 +391,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     castVote: async (winnerId, anonymous = false) => {
       if (!user) {
         console.error("User not authenticated.");
-        return;
+        return false;
       }
-      if (!currentPair) return;
+      if (!currentPair) return false;
 
       const userVoteCount = voteHistory.length;
       if (userVoteCount >= 3) {
         console.warn("Vote limit reached (3 votes per session)");
-        return;
+        return false;
       }
 
       const loserId =
@@ -411,7 +431,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
       if (voteError) {
         console.error("Error casting vote:", voteError);
-        return;
+        return false;
       }
 
       if (newVote) {
@@ -459,7 +479,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           }
           return next;
         });
+
+        return true;
       }
+
+      return false;
     },
     resetVoting: async () => {
       if (!user) {
