@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { CountdownTimer } from "@/components/CountdownTimer";
 
 interface Hackathon {
   id: string;
@@ -30,6 +29,7 @@ export default function HomePage() {
   const [announcement, setAnnouncement] = useState<string | null>(null);
   const [announcementDismissed, setAnnouncementDismissed] = useState(false);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const fetchHackathons = async () => {
@@ -60,6 +60,14 @@ export default function HomePage() {
     };
 
     fetchHackathons();
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -125,6 +133,28 @@ export default function HomePage() {
     }
   };
 
+  const getVotingCountdown = () => {
+    if (!votingDeadline) {
+      return "No voting deadline set";
+    }
+
+    const deadlineTime = votingDeadline.getTime();
+    const diffMs = deadlineTime - now;
+
+    if (diffMs <= 0) {
+      const hoursAgo = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60));
+      return `Voting closed ${hoursAgo} hours ago`;
+    }
+
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  };
+
   return (
     <main className="min-h-screen flex flex-col">
       {/* Hero Section */}
@@ -172,7 +202,10 @@ export default function HomePage() {
             
             {/* Badge */}
             <div className="mb-8 animate-fade-in-up">
-              <CountdownTimer deadline={votingDeadline} label="Voting ends" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--primary)]/30 bg-[var(--primary)]/5 text-sm font-medium text-[var(--foreground)]">
+                <span className="text-[var(--primary)]">⏳</span>
+                <span>{getVotingCountdown()}</span>
+              </div>
             </div>
             
             {/* Heading */}
