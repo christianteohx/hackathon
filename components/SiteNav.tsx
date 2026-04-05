@@ -82,7 +82,7 @@ export function SiteNav() {
 
   const navBar = (
     <nav
-      className="fixed top-0 inset-x-0 z-[var(--z-nav)] h-[var(--nav-height,3.5rem)] border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden"
+      className="fixed top-0 inset-x-0 bg-[var(--background)] border-b border-[var(--border)] print:hidden"
       style={{ height: "var(--nav-height, 3.5rem)" }}
     >
       <div className="max-w-5xl mx-auto px-6 h-full">
