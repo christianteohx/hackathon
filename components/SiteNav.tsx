@@ -109,7 +109,10 @@ export function SiteNav() {
           {/* Mobile Hamburger */}
           <button
             type="button"
-            onClick={() => setMobileOpen(true)}
+            onClick={() => {
+              console.log("[SiteNav] Hamburger clicked, mobileOpen =", true);
+              setMobileOpen(true);
+            }}
             className="md:hidden p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
             aria-label="Open menu"
           >
@@ -124,7 +127,10 @@ export function SiteNav() {
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 mobile-backdrop-enter md:hidden"
-          onClick={() => setMobileOpen(false)}
+          onClick={() => {
+            console.log("[SiteNav] Backdrop clicked, closing mobile menu");
+            setMobileOpen(false);
+          }}
         />
       )}
 
@@ -140,8 +146,8 @@ export function SiteNav() {
             </span>
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
+                console.log("[SiteNav] X button clicked, mobileOpen =", false);
                 setMobileOpen(false);
               }}
               className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors cursor-pointer"
@@ -161,8 +167,8 @@ export function SiteNav() {
                 <Link
                   key={href}
                   href={href}
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={() => {
+                    console.log("[SiteNav] Nav link clicked:", href);
                     setMobileOpen(false);
                   }}
                   className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 cursor-pointer
