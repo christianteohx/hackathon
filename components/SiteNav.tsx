@@ -14,12 +14,14 @@ const navLinks = [
 
 export function SiteNav() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     try {
       const saved = localStorage.getItem("theme");
       const shouldUseDark =
@@ -103,6 +105,12 @@ export function SiteNav() {
     </button>
   );
 
+  if (!mounted) {
+    return (
+      <nav className="sticky top-0 z-40 h-14 border-b border-[var(--border)]" />
+    );
+  }
+
   return (
     <>
       <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden">
@@ -184,7 +192,7 @@ export function SiteNav() {
             </span>
             <button
               type="button"
-              onClick={closeMenu}
+              onClick={() => { alert("X clicked"); closeMenu(); }}
               className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
               aria-label="Close menu"
             >
