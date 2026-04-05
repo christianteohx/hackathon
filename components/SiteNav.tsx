@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 const navLinks = [
@@ -19,8 +19,6 @@ export function SiteNav() {
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -198,26 +196,23 @@ export function SiteNav() {
 
       {mounted &&
         createPortal(
-          <>
+          <div className="md:hidden fixed inset-0 z-[2147483646] pointer-events-none" aria-hidden={!mobileOpen}>
             {/* Mobile Backdrop */}
             {mobileOpen && (
               <div
-                ref={backdropRef}
-                className="fixed inset-0 z-[1000] bg-black/50"
+                className="absolute inset-0 bg-black/50 pointer-events-auto"
                 onPointerDown={handleCloseMenuPress}
                 onClick={handleCloseMenuPress}
                 aria-hidden="true"
-                style={{ display: "block" }}
               />
             )}
 
             {/* Mobile Slide-in Menu */}
             <div
-              ref={menuRef}
               role="dialog"
               aria-modal="true"
               aria-label="Navigation menu"
-              className="fixed top-0 right-0 z-[1001] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl md:hidden"
+              className="absolute top-0 right-0 h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl pointer-events-auto"
               style={{ display: mobileOpen ? "block" : "none" }}
             >
               <div className="flex flex-col h-full">
@@ -262,7 +257,7 @@ export function SiteNav() {
                 </div>
               </div>
             </div>
-          </>,
+          </div>,
           document.body,
         )}
     </>
