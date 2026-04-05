@@ -80,23 +80,57 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
-        .from('projects')
-        .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags, created_at')
-        .order('elo_rating', { ascending: false })
-        .limit(50);
 
-      if (fetchError) {
-        console.error('Error fetching leaderboard:', fetchError);
+      const [projectsRes, votesRes, judgeScoresRes] = await Promise.all([
+        supabase
+          .from('projects')
+          .select('id, name, tagline, description, team_name, demo_url, github_url, elo_rating, join_code, tags, created_at')
+          .limit(50),
+        supabase
+          .from('votes')
+          .select('winner_project_id'),
+        (supabase as any)
+          .from('judge_scores')
+          .select('project_id, innovation, technical, presentation, impact'),
+      ]);
+
+      if (projectsRes.error) {
+        console.error('Error fetching leaderboard:', projectsRes.error);
         setError('Could not load leaderboard. Please try again.');
-      } else {
-        // Parse comma-separated tags into array
-        const parsed = (data || []).map((p: Record<string, unknown>) => ({
+        setLoading(false);
+        return;
+      }
+
+      const voteCounts: Record<string, number> = {};
+      (votesRes.data || []).forEach((vote: { winner_project_id: string }) => {
+        voteCounts[vote.winner_project_id] = (voteCounts[vote.winner_project_id] || 0) + 1;
+      });
+
+      const judgeAverages: Record<string, number> = {};
+      const judgeBuckets: Record<string, number[]> = {};
+      (judgeScoresRes.data || []).forEach((s: { project_id: string; innovation: number; technical: number; presentation: number; impact: number }) => {
+        const avg = (s.innovation + s.technical + s.presentation + s.impact) / 4;
+        if (!judgeBuckets[s.project_id]) judgeBuckets[s.project_id] = [];
+        judgeBuckets[s.project_id].push(avg);
+      });
+      Object.entries(judgeBuckets).forEach(([projectId, arr]) => {
+        judgeAverages[projectId] = arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+      });
+
+      const parsed = (projectsRes.data || []).map((p: Record<string, unknown>) => {
+        const id = p.id as string;
+        const avgJudge = Number.isFinite(judgeAverages[id]) ? judgeAverages[id] : 0;
+        const voteCount = voteCounts[id] || 0;
+        const combinedScore = avgJudge + voteCount;
+        return {
           ...p,
           tags: p.tags ? (p.tags as string).split(',').map((t: string) => t.trim()).filter(Boolean) : [],
-        }));
-        setProjects(parsed as Project[]);
-      }
+          elo_rating: Number.isFinite(combinedScore) ? combinedScore : 0,
+        };
+      });
+
+      parsed.sort((a: any, b: any) => (b.elo_rating ?? 0) - (a.elo_rating ?? 0));
+      setProjects(parsed as Project[]);
       setLoading(false);
     };
 
@@ -229,7 +263,7 @@ export default function LeaderboardPage() {
   return (
     <AppShell
       title="🏆 Leaderboard"
-      subtitle={activeTab === 'elo' ? 'Ranked by Elo rating — updated after every vote' : 'Ranked by votes in the last 24 hours'}
+      subtitle={activeTab === 'elo' ? 'Ranked by combined score (avg judge score + vote count)' : 'Ranked by votes in the last 24 hours'}
     >
       <div className="leaderboard-print-root">
       {/* Tab Switcher */}
@@ -242,7 +276,7 @@ export default function LeaderboardPage() {
               : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--border)]'
           }`}
         >
-          🏅 Elo Rating
+          🏅 Overall
         </button>
         <button
           onClick={() => setActiveTab('trending')}
