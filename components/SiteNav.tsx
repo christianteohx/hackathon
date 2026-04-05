@@ -152,7 +152,6 @@ export function SiteNav() {
         width: "100vw",
         height: "100vh",
         zIndex: 200,
-        pointerEvents: mobileOpen ? "auto" : "none",
         opacity: mobileOpen ? 1 : 0,
         visibility: mobileOpen ? "visible" : "hidden",
         transition: "opacity 0.2s ease",
