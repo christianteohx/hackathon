@@ -56,11 +56,21 @@ export default function VotePage() {
         .limit(1)
         .single();
       if (!error && data?.voting_deadline) {
-        setVotingDeadline(new Date(data.voting_deadline));
+        const deadline = new Date(data.voting_deadline);
+        setVotingDeadline(deadline);
+        if (Date.now() >= deadline.getTime()) {
+          router.replace('/results');
+        }
       }
     };
     fetchVotingDeadline();
-  }, []);
+  }, [router]);
+
+  useEffect(() => {
+    if (votingDeadline && Date.now() >= votingDeadline.getTime()) {
+      router.replace('/results');
+    }
+  }, [votingDeadline, router]);
 
   useEffect(() => {
     if (votesRemaining <= 0 || !currentPair) {
