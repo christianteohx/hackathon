@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -16,6 +16,8 @@ export function SiteNav() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -41,6 +43,37 @@ export function SiteNav() {
       // no-op
     }
   };
+
+  const closeMenu = () => {
+    setMobileOpen(false);
+  };
+
+  const openMenu = () => {
+    setMobileOpen(true);
+  };
+
+  // Close on escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileOpen) {
+        closeMenu();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen]);
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   const themeButton = (
     <button
@@ -71,72 +104,77 @@ export function SiteNav() {
   );
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden">
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="flex items-center justify-between h-14 gap-3">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group" onClick={() => setMobileOpen(false)}>
-            <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-bold text-sm transition-transform group-hover:scale-105">
-              H
+    <>
+      <nav className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="flex items-center justify-between h-14 gap-3">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-bold text-sm transition-transform group-hover:scale-105">
+                H
+              </div>
+              <span className="font-semibold text-[var(--foreground)] hidden sm:block" style={{ fontFamily: 'var(--font-display)' }}>
+                Hackathon
+              </span>
+            </Link>
+
+            {/* Desktop Nav links */}
+            <div className="hidden md:flex items-center gap-1 ml-auto">
+              {navLinks.map(({ href, label }) => {
+                const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                      ${isActive
+                        ? "bg-[var(--primary)] text-white shadow-sm"
+                        : "text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]"
+                      }`}
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
             </div>
-            <span className="font-semibold text-[var(--foreground)] hidden sm:block" style={{ fontFamily: 'var(--font-display)' }}>
-              Hackathon
-            </span>
-          </Link>
 
-          {/* Desktop Nav links */}
-          <div className="hidden md:flex items-center gap-1 ml-auto">
-            {navLinks.map(({ href, label }) => {
-              const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                    ${isActive
-                      ? "bg-[var(--primary)] text-white shadow-sm"
-                      : "text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]"
-                    }`}
-                >
-                  {label}
-                </Link>
-              );
-            })}
+            <div className="hidden md:block">{themeButton}</div>
+
+            {/* Mobile Hamburger */}
+            <button
+              type="button"
+              onClick={openMenu}
+              className="md:hidden p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
+              aria-label="Open menu"
+              aria-expanded={mobileOpen}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           </div>
-
-          <div className="hidden md:block">{themeButton}</div>
-
-          {/* Mobile Hamburger */}
-          <button
-            type="button"
-            onClick={() => {
-              console.log("[SiteNav] Hamburger clicked, mobileOpen =", true);
-              setMobileOpen(true);
-            }}
-            className="md:hidden p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
-            aria-label="Open menu"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
         </div>
-      </div>
+      </nav>
 
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 mobile-backdrop-enter md:hidden"
-          onClick={() => {
-            console.log("[SiteNav] Backdrop clicked, closing mobile menu");
-            setMobileOpen(false);
-          }}
+          ref={backdropRef}
+          className="fixed inset-0 z-[80] bg-black/50"
+          onClick={closeMenu}
+          aria-hidden="true"
         />
       )}
 
       {/* Mobile Slide-in Menu */}
       <div
-        className={`fixed top-0 right-0 z-[60] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl mobile-nav-enter md:hidden`}
+        ref={menuRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        className={`fixed top-0 right-0 z-[90] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl transition-transform duration-300 ease-out md:hidden ${
+          mobileOpen ? "translate-x-0" : "translate-x-full"
+        }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -146,12 +184,8 @@ export function SiteNav() {
             </span>
             <button
               type="button"
-              onClick={() => {
-                console.log("[SiteNav] X button clicked, mobileOpen =", false, "timestamp:", Date.now());
-                setMobileOpen(false);
-                console.log("[SiteNav] setMobileOpen(false) called");
-              }}
-              className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors cursor-pointer"
+              onClick={closeMenu}
+              className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
               aria-label="Close menu"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,11 +202,8 @@ export function SiteNav() {
                 <Link
                   key={href}
                   href={href}
-                  onClick={() => {
-                    console.log("[SiteNav] Nav link clicked:", href);
-                    setMobileOpen(false);
-                  }}
-                  className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 cursor-pointer
+                  onClick={closeMenu}
+                  className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200
                     ${isActive
                       ? "bg-[var(--primary)] text-white shadow-sm"
                       : "text-[var(--foreground)] hover:bg-[var(--muted)]"
@@ -186,6 +217,6 @@ export function SiteNav() {
           </div>
         </div>
       </div>
-    </nav>
+    </>
   );
 }
