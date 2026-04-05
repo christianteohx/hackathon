@@ -5,6 +5,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
+  /* Z-index scale */
+  --z-nav: 50;
+  --z-mobile-overlay: 200;
+  --z-mobile-menu: 201;
+  --z-modal: 300;
+  --z-tooltip: 400;
+  --z-max: 9999;
+
   color-scheme: light;
   
   /* Electric Minimalism palette */
