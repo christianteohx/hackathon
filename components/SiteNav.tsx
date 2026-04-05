@@ -124,10 +124,7 @@ export function SiteNav() {
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 mobile-backdrop-enter md:hidden"
-          onClick={(e) => {
-            e.stopPropagation();
-            setMobileOpen(false);
-          }}
+          onClick={() => setMobileOpen(false)}
         />
       )}
 

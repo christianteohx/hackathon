@@ -386,10 +386,10 @@ export default function SubmitPage() {
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               required
-              maxLength={100}
+              maxLength={140}
               className="w-full rounded-lg border border-[var(--input-border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all"
             />
-            <div className="text-xs text-[var(--muted-foreground)] text-right">{tagline.length}/100</div>
+            <div className="text-xs text-[var(--muted-foreground)] text-right">{tagline.length}/140</div>
           </div>
 
           {/* Description */}
