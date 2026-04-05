@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -14,6 +14,7 @@ const navLinks = [
 
 export function SiteNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
@@ -50,9 +51,18 @@ export function SiteNav() {
     setMobileOpen((prev) => (prev ? false : prev));
   }, []);
 
-  const openMenu = useCallback(() => {
-    setMobileOpen(true);
+  const toggleMenu = useCallback(() => {
+    setMobileOpen((prev) => !prev);
   }, []);
+
+  const handleMobileNavClick = useCallback(
+    (href: string) => (e: MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      closeMenu();
+      router.push(href);
+    },
+    [closeMenu, router],
+  );
 
   const handleCloseMenuPress = useCallback(
     (e: { preventDefault: () => void; stopPropagation: () => void }) => {
@@ -121,14 +131,17 @@ export function SiteNav() {
 
   if (!mounted) {
     return (
-      <nav className="sticky top-0 z-40 h-14 border-b border-[var(--border)]" />
+      <>
+        <nav className="fixed inset-x-0 top-0 z-50 h-14 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden" />
+        <div className="h-14" />
+      </>
     );
   }
 
   return (
     <>
       <nav
-        className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden"
+        className="fixed inset-x-0 top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden"
       >
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex items-center justify-between h-14 gap-3">
@@ -167,7 +180,7 @@ export function SiteNav() {
             {/* Mobile Hamburger */}
             <button
               type="button"
-              onClick={mobileOpen ? closeMenu : openMenu}
+              onClick={toggleMenu}
               className="md:hidden p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
@@ -180,11 +193,13 @@ export function SiteNav() {
         </div>
       </nav>
 
+      <div className="h-14" />
+
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
           ref={backdropRef}
-          className="fixed inset-0 z-[80] bg-black/50"
+          className="fixed inset-0 z-[110] bg-black/50"
           onPointerDown={handleCloseMenuPress}
           onClick={handleCloseMenuPress}
           aria-hidden="true"
@@ -198,7 +213,7 @@ export function SiteNav() {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className="fixed top-0 right-0 z-[90] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl md:hidden"
+        className="fixed top-0 right-0 z-[120] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl md:hidden"
         style={{ display: mobileOpen ? "block" : "none" }}
       >
         <div className="flex flex-col h-full">
@@ -228,7 +243,7 @@ export function SiteNav() {
                 <Link
                   key={href}
                   href={href}
-                  onClick={closeMenu}
+                  onClick={handleMobileNavClick(href)}
                   className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200
                     ${isActive
                       ? "bg-[var(--primary)] text-white shadow-sm"
