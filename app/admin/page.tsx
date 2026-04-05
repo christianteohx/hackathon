@@ -4,6 +4,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AppShell } from '@/components/AppShell';
 
+type HackerRow = {
+  id: string;
+  name: string;
+  projectCount: number;
+};
+
 export default function AdminPage() {
   const [stats, setStats] = useState({
     totalProjects: 0,
@@ -17,12 +23,14 @@ export default function AdminPage() {
   const [announcementDraft, setAnnouncementDraft] = useState('');
   const [savingAnnouncement, setSavingAnnouncement] = useState(false);
   const [announcementMessage, setAnnouncementMessage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'hackers'>('overview');
+  const [hackers, setHackers] = useState<HackerRow[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
 
-      const [projectsRes, votesRes, profilesRes, leaderboardRes, activeHackathonRes] = await Promise.all([
+      const [projectsRes, votesRes, profilesRes, leaderboardRes, activeHackathonRes, hackersRes, projectOwnersRes] = await Promise.all([
         supabase.from('projects').select('id', { count: 'exact' }),
         supabase.from('votes').select('id', { count: 'exact' }),
         supabase.from('profiles').select('id', { count: 'exact' }),
@@ -38,6 +46,13 @@ export default function AdminPage() {
           .order('start_date', { ascending: false })
           .limit(1)
           .maybeSingle(),
+        (supabase as any)
+          .from('profiles')
+          .select('id, name, email')
+          .order('name', { ascending: true }),
+        supabase
+          .from('projects')
+          .select('created_by_user_id'),
       ]);
 
       if (projectsRes.error) console.error('projects error:', projectsRes.error);
@@ -45,6 +60,8 @@ export default function AdminPage() {
       if (profilesRes.error) console.error('profiles error:', profilesRes.error);
       if (leaderboardRes.error) console.error('leaderboard error:', leaderboardRes.error);
       if (activeHackathonRes.error) console.error('active hackathon error:', activeHackathonRes.error);
+      if (hackersRes.error) console.error('hackers error:', hackersRes.error);
+      if (projectOwnersRes.error) console.error('project owners error:', projectOwnersRes.error);
 
       setStats({
         totalProjects: projectsRes.count || 0,
@@ -54,6 +71,24 @@ export default function AdminPage() {
 
       if (leaderboardRes.data) {
         setTopProjects(leaderboardRes.data);
+      }
+
+      if (hackersRes.data) {
+        const projectCountByUser = new Map<string, number>();
+
+        for (const project of projectOwnersRes.data || []) {
+          const ownerId = (project as any).created_by_user_id as string | null;
+          if (!ownerId) continue;
+          projectCountByUser.set(ownerId, (projectCountByUser.get(ownerId) || 0) + 1);
+        }
+
+        const rows = (hackersRes.data as any[]).map((hacker) => ({
+          id: hacker.id,
+          name: hacker.name || hacker.email || 'Unknown hacker',
+          projectCount: projectCountByUser.get(hacker.id) || 0,
+        }));
+
+        setHackers(rows);
       }
 
       const activeHackathon = activeHackathonRes.data as { id: string; announcements: string | null } | null;
@@ -111,6 +146,29 @@ export default function AdminPage() {
         </div>
       )}
 
+      <div className="mb-6 inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+        <button
+          type="button"
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'overview' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          Overview
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('hackers')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'hackers' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          Hackers
+        </button>
+      </div>
+
+      {activeTab === 'overview' ? (
+        <>
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         {statCards.map(({ label, value, icon }) => (
@@ -187,6 +245,29 @@ export default function AdminPage() {
               No active hackathon found. Activate a hackathon to publish an announcement.
             </p>
           )}
+        </div>
+      )}
+
+        </>
+      ) : (
+        <div className="mb-10">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">👥 Hackers</h2>
+          <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm bg-white">
+            <div className="grid grid-cols-[1fr_auto] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 border-b border-gray-200">
+              <span>Name</span>
+              <span>Projects</span>
+            </div>
+            {hackers.length === 0 ? (
+              <p className="px-5 py-6 text-sm text-gray-500">No participants found.</p>
+            ) : (
+              hackers.map((hacker) => (
+                <div key={hacker.id} className="grid grid-cols-[1fr_auto] gap-4 px-5 py-4 border-b border-gray-100 last:border-0">
+                  <span className="text-sm font-medium text-gray-900">{hacker.name}</span>
+                  <span className="text-sm font-semibold text-blue-600">{hacker.projectCount}</span>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 

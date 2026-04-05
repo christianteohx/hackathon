@@ -4,9 +4,18 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useAppState } from "@/lib/app-state";
+import { supabase } from "@/lib/supabase";
+
+type MyProfile = {
+  displayName: string;
+  email: string;
+  projectCount: number;
+  joinDate: string | null;
+};
 
 export default function MyPage() {
   const { user, projects, saveProject, requireAuth } = useAppState();
+  const [profile, setProfile] = useState<MyProfile | null>(null);
   const memberProject = useMemo(
     () => projects.find((project) => project.id === user?.projectId),
     [projects, user?.projectId]
@@ -19,6 +28,56 @@ export default function MyPage() {
     setName(memberProject?.name ?? "");
     setSummary(memberProject?.summary ?? "");
   }, [memberProject?.id, memberProject?.name, memberProject?.summary]);
+
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) {
+        setProfile(null);
+        return;
+      }
+
+      const [profileRes, projectCountRes] = await Promise.all([
+        (supabase as any)
+          .from("profiles")
+          .select("name, email, created_at")
+          .eq("id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("projects")
+          .select("id", { count: "exact", head: true })
+          .eq("created_by_user_id", user.id),
+      ]);
+
+      if (profileRes.error) {
+        console.error("profile error:", profileRes.error);
+      }
+      if (projectCountRes.error) {
+        console.error("project count error:", projectCountRes.error);
+      }
+
+      setProfile({
+        displayName:
+          profileRes.data?.name || user.name || user.email?.split("@")[0] || "Participant",
+        email: profileRes.data?.email || user.email || "—",
+        projectCount: projectCountRes.count || 0,
+        joinDate: profileRes.data?.created_at || null,
+      });
+    };
+
+    loadProfile();
+  }, [user?.email, user?.id, user?.name]);
+
+  const formattedJoinDate = useMemo(() => {
+    if (!profile?.joinDate) return "—";
+    const date = new Date(profile.joinDate);
+    if (Number.isNaN(date.getTime())) return "—";
+    return new Intl.DateTimeFormat(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  }, [profile?.joinDate]);
 
   function onSave(event: FormEvent) {
     event.preventDefault();
@@ -33,6 +92,33 @@ export default function MyPage() {
 
   return (
     <AppShell title="Dashboard" subtitle="Manage your hackathon project and team.">
+      {user && profile && (
+        <section className="mb-6 animate-fade-in-up">
+          <div className="rounded-2xl border border-[var(--border)] bg-white p-6 card-hover">
+            <h2 className="text-xl font-bold text-[var(--foreground)]" style={{ fontFamily: "var(--font-display)" }}>
+              Your Profile
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-[var(--muted-foreground)]">Display Name</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">{profile.displayName}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-[var(--muted-foreground)]">Email</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)] break-all">{profile.email}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-[var(--muted-foreground)]">Project Count</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">{profile.projectCount}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-[var(--muted-foreground)]">Join Date</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">{formattedJoinDate}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
       {!memberProject ? (
         <section className="grid gap-4 sm:grid-cols-2 animate-fade-in-up">
           {/* Create Project Card */}
