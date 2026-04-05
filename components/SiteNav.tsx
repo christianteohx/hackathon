@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -132,7 +133,7 @@ export function SiteNav() {
   if (!mounted) {
     return (
       <>
-        <nav className="fixed inset-x-0 top-0 z-50 h-14 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden" />
+        <nav className="fixed inset-x-0 top-0 z-[1000] h-14 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden" />
         <div className="h-14" />
       </>
     );
@@ -141,7 +142,7 @@ export function SiteNav() {
   return (
     <>
       <nav
-        className="fixed inset-x-0 top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden"
+        className="fixed inset-x-0 top-0 z-[1000] overflow-visible border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden"
       >
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex items-center justify-between h-14 gap-3">
@@ -195,69 +196,75 @@ export function SiteNav() {
 
       <div className="h-14" />
 
-      {/* Mobile Backdrop */}
-      {mobileOpen && (
-        <div
-          ref={backdropRef}
-          className="fixed inset-0 z-[110] bg-black/50"
-          onPointerDown={handleCloseMenuPress}
-          onClick={handleCloseMenuPress}
-          aria-hidden="true"
-          style={{ display: "block" }}
-        />
-      )}
+      {mounted &&
+        createPortal(
+          <>
+            {/* Mobile Backdrop */}
+            {mobileOpen && (
+              <div
+                ref={backdropRef}
+                className="fixed inset-0 z-[1000] bg-black/50"
+                onPointerDown={handleCloseMenuPress}
+                onClick={handleCloseMenuPress}
+                aria-hidden="true"
+                style={{ display: "block" }}
+              />
+            )}
 
-      {/* Mobile Slide-in Menu */}
-      <div
-        ref={menuRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation menu"
-        className="fixed top-0 right-0 z-[120] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl md:hidden"
-        style={{ display: mobileOpen ? "block" : "none" }}
-      >
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 h-14 border-b border-[var(--border)]">
-            <span className="font-semibold text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
-              Menu
-            </span>
-            <button
-              type="button"
-              onPointerDown={handleCloseMenuPress}
-              onClick={handleCloseMenuPress}
-              className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
-              aria-label="Close menu"
+            {/* Mobile Slide-in Menu */}
+            <div
+              ref={menuRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation menu"
+              className="fixed top-0 right-0 z-[1001] h-full w-72 bg-[var(--background)] border-l border-[var(--border)] shadow-2xl md:hidden"
+              style={{ display: mobileOpen ? "block" : "none" }}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 h-14 border-b border-[var(--border)]">
+                  <span className="font-semibold text-[var(--foreground)]" style={{ fontFamily: 'var(--font-display)' }}>
+                    Menu
+                  </span>
+                  <button
+                    type="button"
+                    onPointerDown={handleCloseMenuPress}
+                    onClick={handleCloseMenuPress}
+                    className="p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
+                    aria-label="Close menu"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
 
-          {/* Links */}
-          <div className="flex flex-col p-4 gap-1">
-            {navLinks.map(({ href, label }) => {
-              const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={handleMobileNavClick(href)}
-                  className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200
-                    ${isActive
-                      ? "bg-[var(--primary)] text-white shadow-sm"
-                      : "text-[var(--foreground)] hover:bg-[var(--muted)]"
-                    }`}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-            <div className="pt-2">{themeButton}</div>
-          </div>
-        </div>
-      </div>
+                {/* Links */}
+                <div className="flex flex-col p-4 gap-1">
+                  {navLinks.map(({ href, label }) => {
+                    const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={handleMobileNavClick(href)}
+                        className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200
+                          ${isActive
+                            ? "bg-[var(--primary)] text-white shadow-sm"
+                            : "text-[var(--foreground)] hover:bg-[var(--muted)]"
+                          }`}
+                      >
+                        {label}
+                      </Link>
+                    );
+                  })}
+                  <div className="pt-2">{themeButton}</div>
+                </div>
+              </div>
+            </div>
+          </>,
+          document.body,
+        )}
     </>
   );
 }
