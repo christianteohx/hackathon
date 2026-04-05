@@ -128,9 +128,7 @@ export function SiteNav() {
   return (
     <>
       <nav
-        className={`sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden ${
-          mobileOpen ? "pointer-events-none md:pointer-events-auto" : ""
-        }`}
+        className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md print:hidden"
       >
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex items-center justify-between h-14 gap-3">
@@ -169,10 +167,9 @@ export function SiteNav() {
             {/* Mobile Hamburger */}
             <button
               type="button"
-              onClick={openMenu}
-              disabled={mobileOpen}
+              onClick={mobileOpen ? closeMenu : openMenu}
               className="md:hidden p-2 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
-              aria-label="Open menu"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
