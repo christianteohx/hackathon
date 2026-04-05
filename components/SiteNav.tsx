@@ -183,11 +183,12 @@ export function SiteNav() {
           borderLeft: "1px solid var(--border)",
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
           zIndex: 201,
-          pointerEvents: "auto",
-          display: "flex",
+          pointerEvents: mobileOpen ? "auto" : "none",
+          display: mobileOpen ? "flex" : "none",
           flexDirection: "column",
           transform: mobileOpen ? "translateX(0)" : "translateX(100%)",
-          transition: "transform 0.2s ease",
+          transition: "transform 0.25s ease, opacity 0.25s ease",
+          opacity: mobileOpen ? 1 : 0,
         }}
       >
         {/* Header */}
