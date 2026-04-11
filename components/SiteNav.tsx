@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/vote", label: "Vote" },
   { href: "/judge", label: "Judges" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export function SiteNav() {
