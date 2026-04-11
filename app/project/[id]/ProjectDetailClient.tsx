@@ -5,6 +5,13 @@ import Link from 'next/link';
 import ProjectQR from '@/components/ProjectQR';
 import { AppShell } from '@/components/AppShell';
 
+type JudgeFeedback = {
+  score: number;
+  verdict: string;
+  strengths: string[];
+  concerns: string[];
+};
+
 type ProjectDetail = {
   id: string;
   name: string;
@@ -316,6 +323,9 @@ export default function ProjectDetailClient({ id }: { id: string }) {
         Join code: <code style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: '4px' }}>{project.join_code}</code>
       </p>
 
+      {/* AI Judge Feedback Section */}
+      <AIPanel project={project} />
+
       {/* Toast notification */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up">
@@ -328,5 +338,201 @@ export default function ProjectDetailClient({ id }: { id: string }) {
         </div>
       )}
     </AppShell>
+  );
+}
+
+function AIPanel({ project }: { project: ProjectDetail }) {
+  const [feedback, setFeedback] = useState<JudgeFeedback | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+
+  async function handleGenerate() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/judge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectName: project.name,
+          tagline: project.tagline,
+          description: project.description,
+          demoUrl: project.demo_url,
+          githubUrl: project.github_url,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFeedback(data.data);
+      } else {
+        setError(data.error || 'Failed to generate feedback.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="mt-8 rounded-2xl border border-[var(--border)] bg-white overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-6 py-4 bg-[var(--muted)] hover:bg-[var(--muted)]/80 transition-colors text-left"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-xl">🤖</span>
+          <div>
+            <p className="text-sm font-semibold text-[var(--foreground)]">AI Judge Feedback</p>
+            <p className="text-xs text-[var(--muted-foreground)]">
+              {feedback ? 'Powered by Vertex AI (Gemini)' : 'Get instant feedback from our AI judge'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {feedback && (
+            <span className="px-3 py-1 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-sm font-bold">
+              {feedback.score}/100
+            </span>
+          )}
+          <svg
+            className={`w-4 h-4 text-[var(--muted-foreground)] transition-transform ${expanded ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="px-6 py-5">
+          {!feedback && !loading && !error && (
+            <div className="text-center">
+              <p className="text-sm text-[var(--muted-foreground)] mb-4">
+                Get an instant AI-powered evaluation of your project based on innovation, technical quality, and impact.
+              </p>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+              >
+                <span>🤖</span>
+                Get AI Feedback
+              </button>
+            </div>
+          )}
+
+          {loading && (
+            <div className="text-center py-4">
+              <div className="w-8 h-8 border-3 border-[var(--primary)]/30 border-t-[var(--primary)] rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-[var(--muted-foreground)]">Analyzing your project with AI...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center">
+              <p className="text-sm text-[var(--error)] mb-3">{error}</p>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                className="text-sm text-[var(--primary)] underline hover:no-underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {feedback && (
+            <div className="space-y-4">
+              {/* Score */}
+              <div className="flex items-center gap-4">
+                <div className="relative w-20 h-20 flex-shrink-0">
+                  <svg className="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="var(--muted)"
+                      strokeWidth="3"
+                    />
+                    <path
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="var(--primary)"
+                      strokeWidth="3"
+                      strokeDasharray={`${feedback.score}, 100`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-[var(--foreground)]">
+                    {feedback.score}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">AI Score</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">out of 100</p>
+                </div>
+              </div>
+
+              {/* Verdict */}
+              <div className="rounded-xl bg-[var(--muted)]/50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)] mb-1.5">
+                  Verdict
+                </p>
+                <p className="text-sm text-[var(--foreground)] leading-relaxed">{feedback.verdict}</p>
+              </div>
+
+              {/* Strengths */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--success)] mb-2 flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Strengths
+                </p>
+                <ul className="space-y-1.5">
+                  {feedback.strengths.map((s, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <span className="text-[var(--success)] mt-0.5">✓</span>
+                      <span className="text-[var(--foreground)]">{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Concerns */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--warning)] mb-2 flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Areas for Improvement
+                </p>
+                <ul className="space-y-1.5">
+                  {feedback.concerns.map((c, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <span className="text-[var(--warning)] mt-0.5">→</span>
+                      <span className="text-[var(--foreground)]">{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                >
+                  🔄 Regenerate feedback
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
