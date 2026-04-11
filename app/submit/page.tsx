@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { AppShell } from "@/components/AppShell";
 import { generateJoinCode } from "@/lib/join-code";
+import { AIPitchPanel } from "@/components/AIPitchPanel";
 
 function formatRelativeDate(dateString?: string): string {
   if (!dateString) return "";
@@ -455,6 +456,14 @@ export default function SubmitPage() {
             />
             <div className="text-xs text-[var(--muted-foreground)]">Separate tags with commas (e.g. "ai, web3, mobile")</div>
           </div>
+
+          {/* AI Pitch Generator */}
+          <AIPitchPanel
+            projectName={projectName}
+            tagline={tagline}
+            description={description}
+            onApplyTagline={(p) => setTagline(p)}
+          />
 
           {/* Submit */}
           <button
